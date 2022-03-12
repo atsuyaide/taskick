@@ -35,28 +35,57 @@ UNITS = [
 ]
 
 
-def set_schedule(crontab_fmt: str, task: Callable, *args, **kwargs) -> schedule.Scheduler:
-    scheduler = schedule.Scheduler()
+def set_schedule(scheduler: schedule.Scheduler, crontab_fmt: str, task: Callable, *args, **kwargs) -> schedule.Scheduler:
+    cron_values = crontab_fmt.split()[::-1]
     every = 1
-    interval_is_uncall = True
-    for i, unit in enumerate(crontab_fmt.split()[::-1]):
-        print(f"[{i}] {unit}: ", end="")
-        if unit == "*":
-            print(f"skipped {UNITS[i]}")
+    unit_method_is_called = False
+    every_method_is_called = False
+
+    if "/" in crontab_fmt:
+        at_time = None
+    else:
+        time_values = crontab_fmt.split()[:-1][::-1]
+        time_values = list(filter(lambda x: x != "*", time_values))
+        time_values = list(map(int, time_values))
+        if len(time_values) == 1:
+            at_time = ":{:02}".format(time_values[0])
+        elif len(time_values) == 2:
+            at_time = "{:02}:{:02}:00".format(time_values[0], time_values[1])
+
+        at_time = at_time.replace("*", "")
+
+    for i, unit_str in enumerate(cron_values):
+        if unit_str == "*":
             continue
         else:
-            if re.match("^\\*/\\d+$", unit):
-                every = int(unit.split('/')[-1])
+            if i == 0:
+                # Run task on a weekly units
+                unit = WEEKS[int(unit_str)]
+            else:
+                # Run task on a monthly/daily/hourly/minutely or specific datetime
+                if re.match("^\\*/\\d+$", unit_str):
+                    every = int(unit_str.split('/')[-1])
+                    unit = UNITS[i]
+                else:
+                    # In the case of time specification, the time unit is shifted by -1.
+                    # Run every 23:59 -> Daily
+                    # Run every   :59 -> hourly
+                    unit = UNITS[i - 1]
 
-            if interval_is_uncall:
-                scheduler = scheduler.every(every)
-                interval_is_uncall = False
+        if not every_method_is_called:
+            scheduler = scheduler.every(every)
+            every_method_is_called = not every_method_is_called
 
-            print(UNITS[i])
-            scheduler = getattr(scheduler, UNITS[i])
+        if not unit_method_is_called:
+            scheduler = getattr(scheduler, unit)
+            unit_method_is_called = not unit_method_is_called
+
+    if at_time is not None:
+        print(at_time)
+        scheduler = scheduler.at(at_time)
+
     scheduler = scheduler.do(task, *args, **kwargs)
     logger.debug(repr(scheduler))
-    print(scheduler.at_time)
     return scheduler
 
 
