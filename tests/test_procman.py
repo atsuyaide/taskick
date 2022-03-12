@@ -1,6 +1,7 @@
+import re
 import pytest
 import schedule
-from procman import __version__, set_schedule
+from procman import __version__, get_scheduler, set_scheduled_job, split_crontab_format_simple_form
 
 
 def test_version():
@@ -8,38 +9,152 @@ def test_version():
 
 
 @pytest.mark.parametrize(
-    ("crontab_fmt", "expected_scheduler"),
+    ("crontab_format", "expected_job"),
     [
-        ("*/1  *    *    *   *", schedule.every(1).minute.do(print)),
-        ("*    */1  *    *   *", schedule.every(1).hour.do(print)),
-        ("*    *    */1  *   *", schedule.every(1).day.do(print)),
+        ("*   *   *   *   *", schedule.every(1).minute.do(print)),
+        (" *   *   *   *   * ", schedule.every(1).minute.do(print)),
+        ("*/2 *   *   *   *", schedule.every(2).minutes.do(print)),
+        ("*   */2 *   *   *", schedule.every(2).hours.do(print)),
+        ("*   *   */2 *   *", schedule.every(2).days.do(print)),
         # schedule library does not support monthly format
-        # ("*    *    *    */1 *", schedule.every(1).month.do(print)),
-        ("0    *    *    *   *", schedule.every(1).hour.at(":00").do(print)),
-        ("0    0    *    *   *", schedule.every(1).day.at("00:00:00").do(print)),
-        ("0    0    *    *   0", schedule.every(1).sunday.at("00:00:00").do(print)),
-        ("0    0    *    *   1", schedule.every(1).monday.at("00:00:00").do(print)),
-        ("0    0    *    *   2", schedule.every(1).tuesday.at("00:00:00").do(print)),
-        ("0    0    *    *   3", schedule.every(1).wednesday.at("00:00:00").do(print)),
-        ("0    0    *    *   4", schedule.every(1).thursday.at("00:00:00").do(print)),
-        ("0    0    *    *   5", schedule.every(1).friday.at("00:00:00").do(print)),
-        ("0    0    *    *   6", schedule.every(1).saturday.at("00:00:00").do(print)),
-        ("0    0    *    *   7", schedule.every(1).sunday.at("00:00:00").do(print)),
+        # ("*    *    *    */2 *", schedule.every(2).month.do(print)),
+        ("1   *   *   *   *", schedule.every(1).hour.at(":01").do(print)),
+        ("1   2   *   *   *", schedule.every(1).day.at("02:01:00").do(print)),
+        # schedule library does not support monthly/yearly format
+        # ("1   2   1   *   *", schedule.every(1).month.at("02:01:00").do(print)),
+        # ("1   2   1   1   *", schedule.every(1).year.at("02:01:00").do(print)),
+        ("1   2   *   *   0", schedule.every(1).sunday.at("02:01:00").do(print)),
+        ("1   2   *   *   1", schedule.every(1).monday.at("02:01:00").do(print)),
+        ("1   2   *   *   2", schedule.every(1).tuesday.at("02:01:00").do(print)),
+        ("1   2   *   *   3", schedule.every(1).wednesday.at("02:01:00").do(print)),
+        ("1   2   *   *   4", schedule.every(1).thursday.at("02:01:00").do(print)),
+        ("1   2   *   *   5", schedule.every(1).friday.at("02:01:00").do(print)),
+        ("1   2   *   *   6", schedule.every(1).saturday.at("02:01:00").do(print)),
+        ("1   2   *   *   7", schedule.every(1).sunday.at("02:01:00").do(print)),
     ]
 )
-def test_set_scheduler(crontab_fmt, expected_scheduler):
+def test_set_scheduled_job_given_invalid_input(crontab_format, expected_job):
     scheduler = schedule.Scheduler()
-    scheduler = set_schedule(scheduler, crontab_fmt, print)
+    scheduler = set_scheduled_job(scheduler, crontab_format, print)
+    for job in scheduler.jobs:
+        # Check properities
+        assert expected_job.interval == job.interval
+        assert expected_job.latest == job.latest
+        assert expected_job.unit == job.unit
+        assert expected_job.at_time == job.at_time
+        assert expected_job.last_run == job.last_run
+        assert expected_job.period == job.period
+        assert expected_job.start_day == job.start_day
+        assert expected_job.cancel_after == job.cancel_after
+        assert expected_job.tags == job.tags
 
-    assert expected_scheduler.interval == scheduler.interval
-    assert expected_scheduler.latest == scheduler.latest
-    assert expected_scheduler.unit == scheduler.unit
-    assert expected_scheduler.at_time == scheduler.at_time
-    assert expected_scheduler.last_run == scheduler.last_run
-    assert expected_scheduler.period == scheduler.period
-    assert expected_scheduler.start_day == scheduler.start_day
-    assert expected_scheduler.cancel_after == scheduler.cancel_after
-    assert expected_scheduler.tags == scheduler.tags
+
+@pytest.mark.parametrize(
+    ("crontab_format", "expected_crontab_format_list"),
+    [
+        ("0,1  *    *    *   *", [
+            "0  *    *    *   *",
+            "1  *    *    *   *"
+        ]),
+        ("1-3  *    *    *   *", [
+            "1  *    *    *   *",
+            "2  *    *    *   *",
+            "3  *    *    *   *",
+        ]),
+        ("0,1-3  *    *    *   *", [
+            "0  *    *    *   *",
+            "1  *    *    *   *",
+            "2  *    *    *   *",
+            "3  *    *    *   *",
+        ]),
+        ("0,1-5/2  *    *    *   *", [
+            "0  *    *    *   *",
+            "1  *    *    *   *",
+            "3  *    *    *   *",
+            "5  *    *    *   *",
+        ]),
+        # ("10,5/20  *    *    *   *", [
+        #     "5   *    *    *   *",
+        #     "10  *    *    *   *",
+        #     "25  *    *    *   *",
+        #     "45  *    *    *   *",
+        # ]),
+        # ("10,*/20  *    *    *   *", [
+        #     "00  *    *    *   *",
+        #     "10  *    *    *   *",
+        #     "20  *    *    *   *",
+        #     "40  *    *    *   *",
+        # ]),
+    ]
+)
+def test_split_crontab_format_simple_form(crontab_format, expected_crontab_format_list):
+    crontab_format_list = split_crontab_format_simple_form(crontab_format)
+    assert len(crontab_format_list) == len(expected_crontab_format_list)
+
+    for expected, result in zip(expected_crontab_format_list, crontab_format_list):
+        # Replace wasted spaces.
+        expected = " ".join(expected.split())
+        assert expected == result
+
+
+@pytest.mark.parametrize(
+    ("crontab_format", "expected_job_list"),
+    [
+        ("*       *   *   *   *", [
+            schedule.every(1).minute.do(print),
+        ]),
+        ("1       *   *   *   *", [
+            schedule.every(1).hour.at(":01").do(print),
+        ]),
+        ("0,1     *   *   *   *", [
+            schedule.every(1).hour.at(":00").do(print),
+            schedule.every(1).hour.at(":01").do(print),
+        ]),
+        ("0-2      *   *   *   *", [
+            schedule.every(1).hour.at(":00").do(print),
+            schedule.every(1).hour.at(":01").do(print),
+            schedule.every(1).hour.at(":02").do(print),
+        ]),
+        ("1-7/2    *   *   *   *", [
+            schedule.every(1).hour.at(":01").do(print),
+            schedule.every(1).hour.at(":03").do(print),
+            schedule.every(1).hour.at(":05").do(print),
+            schedule.every(1).hour.at(":07").do(print),
+        ]),
+        ("0,1-7/2 *   *   *   *", [
+            schedule.every(1).hour.at(":00").do(print),
+            schedule.every(1).hour.at(":01").do(print),
+            schedule.every(1).hour.at(":03").do(print),
+            schedule.every(1).hour.at(":05").do(print),
+            schedule.every(1).hour.at(":07").do(print),
+        ]),
+    ]
+)
+def test_get_scheduler(crontab_format, expected_job_list):
+    scheduler = get_scheduler(crontab_format, print)
+    assert len(scheduler.jobs) == len(expected_job_list)
+    for expected_job, job in zip(expected_job_list, scheduler.jobs):
+        # Check properities
+        assert expected_job.interval == job.interval
+        assert expected_job.latest == job.latest
+        assert expected_job.unit == job.unit
+        assert expected_job.at_time == job.at_time
+        assert expected_job.last_run == job.last_run
+        assert expected_job.period == job.period
+        assert expected_job.start_day == job.start_day
+        assert expected_job.cancel_after == job.cancel_after
+        assert expected_job.tags == job.tags
+
+# @pytest.mark.parametrize(
+#     ("crontab_format", "expected_exception"),
+#     [
+#         ("* * * * *", ValueError),
+#     ]
+# )
+# def test_set_scheduled_jobr_given_invalid_input(crontab_format, expected_exception):
+#     scheduler = schedule.Scheduler()
+#     with pytest.raises(expected_exception):
+#         scheduler = set_scheduled_job(scheduler, crontab_format, print)
 
 
 def test_get_obeserver():
