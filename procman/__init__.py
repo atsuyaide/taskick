@@ -47,6 +47,14 @@ UNITS = [
     "minute",
 ]
 
+UNITS_UPPER = {
+    "week": 7,
+    "month": 12,
+    "day": 31,
+    "hour": 23,
+    "minute": 59,
+}
+
 
 def set_scheduled_job(scheduler: schedule.Scheduler, crontab_format: str, task: Callable, *args, **kwargs) -> schedule.Scheduler:
     if re.match("^( *\\*){5} *$", crontab_format):
@@ -94,7 +102,6 @@ def set_scheduled_job(scheduler: schedule.Scheduler, crontab_format: str, task: 
                     unit = UNITS[i - 1]
 
         if not every_method_is_called:
-            print(repr(scheduler))
             job = scheduler.every(every)
             every_method_is_called = not every_method_is_called
 
@@ -110,52 +117,53 @@ def set_scheduled_job(scheduler: schedule.Scheduler, crontab_format: str, task: 
         job = job.at(at_time)
 
     job.do(task, *args, **kwargs)
-    logger.debug(repr(scheduler))
-    print(repr(scheduler))
+    logger.debug(f"Job has been added: {repr(scheduler)}")
     return scheduler
 
 
-def split_crontab_format_simple_form(crontab_format: str) -> List[str]:
+def simplify_crontab_format(crontab_format: str) -> List[str]:
     cron_values = crontab_format.split()
-    cron_values = [x.split(",") for x in cron_values]
-    temp_cron_values = []
-
-    for x in cron_values:
-        u = []
-        for y in x:
-            interval = 1
-            if re.match("^\\d+$", y):
-                u.extend(y)
-                continue
-            elif re.match("^\\*$", y):
-                pass
-            elif re.match("^\\*$/\\d+", y):
-                pass
-            elif re.match("^(\\*|\\d+|\\d+-\\d+|)/\\d+$", y):
-                y, interval = y.split("/")
-
-            if re.match("^\\d+-\\d+$", y):
-                s, e = map(int, y.split("-"))
-                y = list(map(str, list(range(s, e + 1, int(interval)))))
-
-            u.extend(y)
-        # print(u)
-        temp_cron_values.append(u)
-    cron_values = temp_cron_values
-    # print(cron_values)
-
     if len(cron_values) != 5:
         raise CrontabFormatError('Must consist of five elements.')
 
-    cron_value_products = list(itertools.product(*cron_values))
-    simple_form = sorted([" ".join(x) for x in cron_value_products])
-    print(simple_form)
-    return simple_form
+    cron_values = [x.split(",") for x in cron_values]
+
+    merged_cron_str_list = []
+
+    for i, unit_str_list in enumerate(cron_values):
+        cv_list = []
+        for unit_str in unit_str_list:
+            interval = 1
+
+            if re.match("^(\\d+|\\*)$", unit_str) or re.match("^\\*/\\d+$", unit_str):
+                cv_list.extend([unit_str])
+                continue
+            elif re.match("^\\d+-\\d+$", unit_str):
+                s, e = map(int, unit_str.split("-"))
+                e += 1
+            elif re.match("^\\d+/\\d+", unit_str):
+                s, interval = unit_str.split("/")
+                s = 0 if s == "*" else int(s)
+                e = UNITS_UPPER[UNITS[-i-1]]
+            elif re.match("^\\d+-\\d+/\\d+$", unit_str):
+                unit_str, interval = unit_str.split("/")
+                s, e = map(int, unit_str.split("-"))
+                e += 1
+            else:
+                raise CrontabFormatError
+
+            cv_list.extend(list(map(str, list(range(s, e, int(interval))))))
+        merged_cron_str_list.append(cv_list)
+
+    cron_value_products = list(itertools.product(*merged_cron_str_list))
+    simple_form_list = sorted([" ".join(x) for x in cron_value_products])
+    logger.debug(f"Add schedule: {simple_form_list}")
+    return simple_form_list
 
 
 def get_scheduler(crontab_format: str, task: Callable) -> schedule.Scheduler:
     scheduler = schedule.Scheduler()
-    crontab_format_list = split_crontab_format_simple_form(crontab_format)
+    crontab_format_list = simplify_crontab_format(crontab_format)
 
     for crontab_format in crontab_format_list:
         scheduler = set_scheduled_job(scheduler, crontab_format, task)

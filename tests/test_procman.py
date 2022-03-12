@@ -1,7 +1,7 @@
 import re
 import pytest
 import schedule
-from procman import __version__, get_scheduler, set_scheduled_job, split_crontab_format_simple_form
+from procman import __version__, get_scheduler, set_scheduled_job, simplify_crontab_format
 
 
 def test_version():
@@ -33,7 +33,7 @@ def test_version():
         ("1   2   *   *   7", schedule.every(1).sunday.at("02:01:00").do(print)),
     ]
 )
-def test_set_scheduled_job_given_invalid_input(crontab_format, expected_job):
+def test_set_scheduled_job(crontab_format, expected_job):
     scheduler = schedule.Scheduler()
     scheduler = set_scheduled_job(scheduler, crontab_format, print)
     for job in scheduler.jobs:
@@ -73,22 +73,21 @@ def test_set_scheduled_job_given_invalid_input(crontab_format, expected_job):
             "3  *    *    *   *",
             "5  *    *    *   *",
         ]),
-        # ("10,5/20  *    *    *   *", [
-        #     "5   *    *    *   *",
-        #     "10  *    *    *   *",
-        #     "25  *    *    *   *",
-        #     "45  *    *    *   *",
-        # ]),
-        # ("10,*/20  *    *    *   *", [
-        #     "00  *    *    *   *",
-        #     "10  *    *    *   *",
-        #     "20  *    *    *   *",
-        #     "40  *    *    *   *",
-        # ]),
+        ("10,5/20  *    *    *   *", [
+            "5   *    *    *   *",
+            "10  *    *    *   *",
+            "25  *    *    *   *",
+            "45  *    *    *   *",
+        ]),
+        ("10,*/20  *    *    *   *", [
+            "*/20   *    *    *   *",
+            "10  *    *    *   *",
+        ]),
     ]
 )
-def test_split_crontab_format_simple_form(crontab_format, expected_crontab_format_list):
-    crontab_format_list = split_crontab_format_simple_form(crontab_format)
+def test_simplify_crontab_format(crontab_format, expected_crontab_format_list):
+    expected_crontab_format_list = sorted(expected_crontab_format_list)
+    crontab_format_list = simplify_crontab_format(crontab_format)
     assert len(crontab_format_list) == len(expected_crontab_format_list)
 
     for expected, result in zip(expected_crontab_format_list, crontab_format_list):
