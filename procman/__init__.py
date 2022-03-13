@@ -2,9 +2,12 @@ __version__ = "0.1.0"
 
 
 import re
+import time
+import yaml
 import logging
 import schedule
 import itertools
+import subprocess
 from typing import Callable, List
 
 logger = logging.getLogger('procman')
@@ -117,7 +120,7 @@ def set_scheduled_job(scheduler: schedule.Scheduler, crontab_format: str, task: 
         job = job.at(at_time)
 
     job.do(task, *args, **kwargs)
-    logger.debug(f"Job has been added: {repr(scheduler)}")
+    logger.debug(f"Job has been added: {repr(job)}")
     return scheduler
 
 
@@ -157,16 +160,16 @@ def simplify_crontab_format(crontab_format: str) -> List[str]:
 
     cron_value_products = list(itertools.product(*merged_cron_str_list))
     simple_form_list = sorted([" ".join(x) for x in cron_value_products])
-    logger.debug(f"Add schedule: {simple_form_list}")
+    # logger.debug(f"Add schedule: {simple_form_list}")
     return simple_form_list
 
 
-def get_scheduler(crontab_format: str, task: Callable) -> schedule.Scheduler:
-    scheduler = schedule.Scheduler()
+def update_scheduler(scheduler: schedule.Scheduler, crontab_format: str, task: Callable, *args, **kwargs) -> schedule.Scheduler:
     crontab_format_list = simplify_crontab_format(crontab_format)
 
     for crontab_format in crontab_format_list:
-        scheduler = set_scheduled_job(scheduler, crontab_format, task)
+        scheduler = set_scheduled_job(
+            scheduler, crontab_format, task, *args, **kwargs)
 
     return scheduler
 
@@ -175,9 +178,56 @@ def get_observer(folder_path: str, event_type: str):
     pass
 
 
-class Procaman(object):
-    def __init__(self) -> None:
-        super().__init__()
+class TaskRunner:
+    def __init__(self, job_config: str) -> None:
+        self.scheduler = schedule.Scheduler()
+        self.observer = None
 
-    def run() -> None:
-        pass
+        with open(job_config, "r") as f:
+            config = yaml.safe_load(f)
+
+        for task_name, task_detail in config.items():
+            logger.debug(f"{task_name}: {task_detail}")
+            if task_detail['status'] != 1:
+                logger.debug(f"{task_name} skipped.")
+                continue
+
+            script_path = task_detail["script_path"]
+            options_detail = task_detail["options"]
+            execution_detail = task_detail["execution"]
+            cmd = self._get_execution_cmd(script_path, options_detail)
+
+            if execution_detail["immediate"]:
+                self._execute_cmd(cmd)
+
+            if execution_detail["event_type"] == "time":
+                self.scheduler = update_scheduler(
+                    self.scheduler,
+                    execution_detail["when"],
+                    self._execute_cmd,
+                    cmd
+                )
+            elif execution_detail["event_type"] == "file":
+                pass
+            else:
+                raise ValueError
+            logger.info(f"'{task_name}' was Registered.")
+
+    def _get_execution_cmd(self, file_path: str, options: dict) -> str:
+        cmd = ["python", file_path]
+
+        for key, value in options.items():
+            cmd.append(f"--{key}")
+            if value is not None:
+                cmd.append(value)
+
+        return cmd
+
+    def _execute_cmd(self, cmd: list) -> None:
+        logger.debug('Started: ' + " ".join(cmd))
+        subprocess.Popen(cmd)
+
+    def run(self) -> None:
+        while True:
+            self.scheduler.run_pending()
+            time.sleep(1)

@@ -1,11 +1,27 @@
-import re
 import pytest
 import schedule
-from procman import __version__, get_scheduler, set_scheduled_job, simplify_crontab_format
+from procman import(
+    __version__,
+    update_scheduler,
+    set_scheduled_job,
+    simplify_crontab_format
+)
 
 
 def test_version():
     assert __version__ == "0.1.0"
+
+
+def _check_job_properites(expected_job, job):
+    assert expected_job.interval == job.interval
+    assert expected_job.latest == job.latest
+    assert expected_job.unit == job.unit
+    assert expected_job.at_time == job.at_time
+    assert expected_job.last_run == job.last_run
+    assert expected_job.period == job.period
+    assert expected_job.start_day == job.start_day
+    assert expected_job.cancel_after == job.cancel_after
+    assert expected_job.tags == job.tags
 
 
 @pytest.mark.parametrize(
@@ -37,16 +53,7 @@ def test_set_scheduled_job(crontab_format, expected_job):
     scheduler = schedule.Scheduler()
     scheduler = set_scheduled_job(scheduler, crontab_format, print)
     for job in scheduler.jobs:
-        # Check properities
-        assert expected_job.interval == job.interval
-        assert expected_job.latest == job.latest
-        assert expected_job.unit == job.unit
-        assert expected_job.at_time == job.at_time
-        assert expected_job.last_run == job.last_run
-        assert expected_job.period == job.period
-        assert expected_job.start_day == job.start_day
-        assert expected_job.cancel_after == job.cancel_after
-        assert expected_job.tags == job.tags
+        _check_job_properites(expected_job, job)
 
 
 @pytest.mark.parametrize(
@@ -129,20 +136,12 @@ def test_simplify_crontab_format(crontab_format, expected_crontab_format_list):
         ]),
     ]
 )
-def test_get_scheduler(crontab_format, expected_job_list):
-    scheduler = get_scheduler(crontab_format, print)
+def test_update_scheduler(crontab_format, expected_job_list):
+    scheduler = schedule.Scheduler()
+    scheduler = update_scheduler(scheduler, crontab_format, print)
     assert len(scheduler.jobs) == len(expected_job_list)
     for expected_job, job in zip(expected_job_list, scheduler.jobs):
-        # Check properities
-        assert expected_job.interval == job.interval
-        assert expected_job.latest == job.latest
-        assert expected_job.unit == job.unit
-        assert expected_job.at_time == job.at_time
-        assert expected_job.last_run == job.last_run
-        assert expected_job.period == job.period
-        assert expected_job.start_day == job.start_day
-        assert expected_job.cancel_after == job.cancel_after
-        assert expected_job.tags == job.tags
+        _check_job_properites(expected_job, job)
 
 # @pytest.mark.parametrize(
 #     ("crontab_format", "expected_exception"),
@@ -150,7 +149,7 @@ def test_get_scheduler(crontab_format, expected_job_list):
 #         ("* * * * *", ValueError),
 #     ]
 # )
-# def test_set_scheduled_jobr_given_invalid_input(crontab_format, expected_exception):
+# def test_set_scheduled_job_given_invalid_input(crontab_format, expected_exception):
 #     scheduler = schedule.Scheduler()
 #     with pytest.raises(expected_exception):
 #         scheduler = set_scheduled_job(scheduler, crontab_format, print)
