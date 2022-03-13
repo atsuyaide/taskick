@@ -5,4 +5,7 @@
 ## Usage
 ```
 git clone https://github.com/kappa000/procman.git
+cd procman
+poetry shell
+python -m procman
 ```
