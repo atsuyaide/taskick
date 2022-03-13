@@ -1,5 +1,5 @@
 ### $JOB_NAME:
-###   status: true  <- true/false, If True, this job is active.
+###   status: 1  <- 0/1, If 1, this job is active.
 ###   script_path:  <- PATH of the script you want to run.
 ###   execution:
 ###     event_type: <- time/file.
