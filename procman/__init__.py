@@ -60,6 +60,19 @@ UNITS_UPPER = {
 
 
 def set_scheduled_job(scheduler: schedule.Scheduler, crontab_format: str, task: Callable, *args, **kwargs) -> schedule.Scheduler:
+    """_summary_
+
+    Args:
+        scheduler (schedule.Scheduler): _description_
+        crontab_format (str): _description_
+        task (Callable): _description_
+
+    Raises:
+        CrontabFormatError: _description_
+
+    Returns:
+        schedule.Scheduler: _description_
+    """
     if re.match("^( *\\*){5} *$", crontab_format):
         return set_scheduled_job(scheduler, "*/1 * * * *", task)
 
@@ -85,9 +98,7 @@ def set_scheduled_job(scheduler: schedule.Scheduler, crontab_format: str, task: 
         at_time = at_time.replace("*", "")
 
     for i, unit_str in enumerate(cron_values):
-        # print(f"{unit_str} : ", end="")
         if unit_str == "*":
-            # print("skipped")
             continue
         else:
             if i == 0:
@@ -105,26 +116,37 @@ def set_scheduled_job(scheduler: schedule.Scheduler, crontab_format: str, task: 
                     unit = UNITS[i - 1]
 
         if not every_method_is_called:
-            job = scheduler.every(every)
             every_method_is_called = not every_method_is_called
+            job = scheduler.every(every)
 
         if not unit_method_is_called:
+            unit_method_is_called = not unit_method_is_called
             if every != 1:
                 unit += "s"
-            # print(unit)
             job = getattr(job, unit)
-            unit_method_is_called = not unit_method_is_called
 
     if at_time is not None:
         # print(at_time)
         job = job.at(at_time)
 
     job.do(task, *args, **kwargs)
-    logger.debug(f"Job has been added: {repr(job)}")
+    logger.debug(f"Added a job: {repr(job)}")
     return scheduler
 
 
 def simplify_crontab_format(crontab_format: str) -> List[str]:
+    """_summary_
+
+    Args:
+        crontab_format (str): _description_
+
+    Raises:
+        CrontabFormatError: _description_
+        CrontabFormatError: _description_
+
+    Returns:
+        List[str]: _description_
+    """
     cron_values = crontab_format.split()
     if len(cron_values) != 5:
         raise CrontabFormatError('Must consist of five elements.')
@@ -160,11 +182,20 @@ def simplify_crontab_format(crontab_format: str) -> List[str]:
 
     cron_value_products = list(itertools.product(*merged_cron_str_list))
     simple_form_list = sorted([" ".join(x) for x in cron_value_products])
-    # logger.debug(f"Add schedule: {simple_form_list}")
     return simple_form_list
 
 
 def update_scheduler(scheduler: schedule.Scheduler, crontab_format: str, task: Callable, *args, **kwargs) -> schedule.Scheduler:
+    """_summary_
+
+    Args:
+        scheduler (schedule.Scheduler): _description_
+        crontab_format (str): _description_
+        task (Callable): _description_
+
+    Returns:
+        schedule.Scheduler: _description_
+    """
     crontab_format_list = simplify_crontab_format(crontab_format)
 
     for crontab_format in crontab_format_list:
@@ -179,7 +210,18 @@ def get_observer(folder_path: str, event_type: str):
 
 
 class TaskRunner:
+    """_summary_
+    """
+
     def __init__(self, job_config: str) -> None:
+        """_summary_
+
+        Args:
+            job_config (str): _description_
+
+        Raises:
+            ValueError: _description_
+        """
         self.scheduler = schedule.Scheduler()
         self.observer = None
 
@@ -189,7 +231,7 @@ class TaskRunner:
         for task_name, task_detail in config.items():
             logger.debug(f"{task_name}: {task_detail}")
             if task_detail['status'] != 1:
-                logger.debug(f"{task_name} skipped.")
+                logger.debug(f"Skipped: {task_name}")
                 continue
 
             script_path = task_detail["script_path"]
@@ -214,6 +256,15 @@ class TaskRunner:
             logger.info(f"'{task_name}' was Registered.")
 
     def _get_execution_cmd(self, file_path: str, options: dict) -> str:
+        """
+
+        Args:
+            file_path (str): _description_
+            options (dict): _description_
+
+        Returns:
+            str: _description_
+        """
         cmd = ["python", file_path]
 
         for key, value in options.items():
@@ -224,10 +275,17 @@ class TaskRunner:
         return cmd
 
     def _execute_cmd(self, cmd: list) -> None:
+        """_summary_
+
+        Args:
+            cmd (list): _description_
+        """
         logger.debug('Started: ' + " ".join(cmd))
         subprocess.Popen(cmd)
 
     def run(self) -> None:
+        """_summary_
+        """
         while True:
             self.scheduler.run_pending()
             time.sleep(1)

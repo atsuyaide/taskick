@@ -1,0 +1,42 @@
+### $JOB_NAME:
+###   status: true  <- true/false, If True, this job is active.
+###   script_path:  <- PATH of the script you want to run.
+###   execution:
+###     event_type: <- time/file.
+###     immediate:  <- true/false. If True, it is executed immediately.
+###     when:       <- time: crontab format, file:
+###   options:
+###     $OPTION: $VALUE
+
+example_time_trigger_process_1:
+  # Run every minute. -> "python ./example.py --message 'procamn! thi...'"
+  status: 1
+  script_path: ./example.py
+  execution:
+    event_type: time
+    immediate: true
+    when: "*/1 * * * *"
+  options:
+    message: Procman! This process runs every minute.
+
+example_time_trigger_process_2:
+  # Run every 2 minutes. -> "python ./example.py --message 'procamn! thi...'"
+  status: 1
+  script_path: ./example.py
+  execution:
+    event_type: time
+    immediate: true
+    when: "*/2 * * * *"
+  options:
+    message: Procman! This process runs every 2 minutes.
+
+example_time_trigger_process_3:
+  # Run every 2 minutes. But inactive.
+  status: 0
+  script_path: ./example.py
+  execution:
+    event_type: time
+    immediate: true
+    when: "*/2 * * * *"
+  options:
+    message: Procman! This process runs every 2 minutes.
