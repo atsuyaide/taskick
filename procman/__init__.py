@@ -1,16 +1,17 @@
 __version__ = "0.1.0"
 
 
-import re
-import time
-import yaml
-import logging
-import schedule
 import itertools
+import logging
+import re
 import subprocess
+import time
 from typing import Callable, List
 
-logger = logging.getLogger('procman')
+import schedule
+import yaml
+
+logger = logging.getLogger("procman")
 
 
 class ProcmanError(Exception):
@@ -39,7 +40,7 @@ WEEKS = [
     "thursday",
     "friday",
     "saturday",
-    "sunday"
+    "sunday",
 ]
 
 UNITS = [
@@ -59,7 +60,9 @@ UNITS_UPPER = {
 }
 
 
-def set_scheduled_job(scheduler: schedule.Scheduler, crontab_format: str, task: Callable, *args, **kwargs) -> schedule.Scheduler:
+def set_scheduled_job(
+    scheduler: schedule.Scheduler, crontab_format: str, task: Callable, *args, **kwargs
+) -> schedule.Scheduler:
     """_summary_
 
     Args:
@@ -113,7 +116,7 @@ def set_scheduled_job(scheduler: schedule.Scheduler, crontab_format: str, task: 
             else:
                 # Run task on a monthly/daily/hourly/minutely or specific datetime
                 if re.match("^\\*/\\d+$", unit_str):
-                    every = int(unit_str.split('/')[-1])
+                    every = int(unit_str.split("/")[-1])
                     unit = UNITS[i]
                 elif unit is None:
                     # Run every 23:59 -> Daily
@@ -163,7 +166,7 @@ def simplify_crontab_format(crontab_format: str) -> List[str]:
     """
     cron_values = crontab_format.split()
     if len(cron_values) != 5:
-        raise CrontabFormatError('Must consist of five elements.')
+        raise CrontabFormatError("Must consist of five elements.")
 
     cron_values = [x.split(",") for x in cron_values]
 
@@ -183,7 +186,7 @@ def simplify_crontab_format(crontab_format: str) -> List[str]:
             elif re.match("^\\d+/\\d+", unit_str):
                 s, interval = unit_str.split("/")
                 s = 0 if s == "*" else int(s)
-                e = UNITS_UPPER[UNITS[-i-1]]
+                e = UNITS_UPPER[UNITS[-i - 1]]
             elif re.match("^\\d+-\\d+/\\d+$", unit_str):
                 unit_str, interval = unit_str.split("/")
                 s, e = map(int, unit_str.split("-"))
@@ -199,7 +202,9 @@ def simplify_crontab_format(crontab_format: str) -> List[str]:
     return simple_form_list
 
 
-def update_scheduler(scheduler: schedule.Scheduler, crontab_format: str, task: Callable, *args, **kwargs) -> schedule.Scheduler:
+def update_scheduler(
+    scheduler: schedule.Scheduler, crontab_format: str, task: Callable, *args, **kwargs
+) -> schedule.Scheduler:
     """_summary_
 
     Args:
@@ -213,8 +218,7 @@ def update_scheduler(scheduler: schedule.Scheduler, crontab_format: str, task: C
     crontab_format_list = simplify_crontab_format(crontab_format)
 
     for crontab_format in crontab_format_list:
-        scheduler = set_scheduled_job(
-            scheduler, crontab_format, task, *args, **kwargs)
+        scheduler = set_scheduled_job(scheduler, crontab_format, task, *args, **kwargs)
 
     return scheduler
 
@@ -224,8 +228,7 @@ def get_observer(folder_path: str, event_type: str):
 
 
 class TaskRunner:
-    """_summary_
-    """
+    """_summary_"""
 
     def __init__(self, job_config: str) -> None:
         """_summary_
@@ -239,12 +242,12 @@ class TaskRunner:
         self.scheduler = schedule.Scheduler()
         self.observer = None
 
-        with open(job_config, "r", encoding='utf-8') as f:
+        with open(job_config, "r", encoding="utf-8") as f:
             config = yaml.safe_load(f)
 
         for task_name, task_detail in config.items():
             logger.debug(f"Processing: {task_name}: {task_detail}")
-            if task_detail['status'] != 1:
+            if task_detail["status"] != 1:
                 logger.debug(f"Skipped: {task_name}")
                 continue
 
@@ -254,12 +257,7 @@ class TaskRunner:
             cmd = self._get_execution_cmd(commands, options)
 
             if execution_detail["event_type"] == "time":
-                self.scheduler = update_scheduler(
-                    self.scheduler,
-                    execution_detail["when"],
-                    self._execute_job,
-                    cmd
-                )
+                self.scheduler = update_scheduler(self.scheduler, execution_detail["when"], self._execute_job, cmd)
             elif execution_detail["event_type"] == "file":
                 pass
             else:
@@ -267,7 +265,7 @@ class TaskRunner:
             logger.info(f"Registered: '{task_name}'")
 
             if execution_detail["immediate"]:
-                logger.info('Immediate execution option is selected.')
+                logger.info("Immediate execution option is selected.")
                 self._execute_job(cmd)
 
     def _get_execution_cmd(self, commands: list, options: dict) -> List[str]:
@@ -299,8 +297,7 @@ class TaskRunner:
         subprocess.Popen(commands)
 
     def run(self) -> None:
-        """_summary_
-        """
+        """_summary_"""
         while True:
             self.scheduler.run_pending()
             time.sleep(1)

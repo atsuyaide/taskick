@@ -1,7 +1,8 @@
-import sys
-import logging
 import argparse
+import logging
+import sys
 from logging import getLogger
+
 from procman import TaskRunner
 
 parser = argparse.ArgumentParser()
@@ -15,8 +16,7 @@ if args.debug:
 
 
 def main() -> None:
-    """_summary_
-    """
+    """_summary_"""
     TR = TaskRunner(args.file)
 
     try:
@@ -26,6 +26,7 @@ def main() -> None:
     except Exception as e:
         logger.error(e)
         import traceback
+
         traceback.print_exc()
 
 
