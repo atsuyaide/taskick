@@ -9,7 +9,7 @@
 ###     $OPTION: $VALUE
 
 example_time_trigger_process_1:
-  # Run every minute. -> "python ./example.py --message 'procamn! thi...'"
+  # Run every minute. -> "python ./example.py --message 'procman! thi...'"
   status: 1
   commands:
     - python
@@ -22,7 +22,7 @@ example_time_trigger_process_1:
     --message: Procman! This process runs every minute.
 
 example_time_trigger_process_2:
-  # Run every 2 minutes. -> "python ./example.py --message 'procamn! thi...'"
+  # Run every 2 minutes. -> "python ./example.py --message 'procman! thi...'"
   status: 1
   commands:
     - python
