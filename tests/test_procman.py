@@ -1,8 +1,12 @@
 import pytest
 import schedule
 
-from procman import (__version__, set_scheduled_job, simplify_crontab_format,
-                     update_scheduler)
+from procman import (
+    __version__,
+    set_scheduled_job,
+    simplify_crontab_format,
+    update_scheduler,
+)
 
 
 def test_version():
@@ -46,7 +50,7 @@ def _check_job_properites(expected_job, job):
         ("1   2   *   *   5", schedule.every(1).friday.at("02:01:00").do(print)),
         ("1   2   *   *   6", schedule.every(1).saturday.at("02:01:00").do(print)),
         ("1   2   *   *   7", schedule.every(1).sunday.at("02:01:00").do(print)),
-    ]
+    ],
 )
 def test_set_scheduled_job(crontab_format, expected_job):
     scheduler = schedule.Scheduler()
@@ -58,56 +62,74 @@ def test_set_scheduled_job(crontab_format, expected_job):
 @pytest.mark.parametrize(
     ("crontab_format", "expected_crontab_format_list"),
     [
-        ("0,1  *    *    *   *", [
-            "0  *    *    *   *",
-            "1  *    *    *   *"
-        ]),
-        ("1-3  *    *    *   *", [
-            "1  *    *    *   *",
-            "2  *    *    *   *",
-            "3  *    *    *   *",
-        ]),
-        ("0,1-3  *    *    *   *", [
-            "0  *    *    *   *",
-            "1  *    *    *   *",
-            "2  *    *    *   *",
-            "3  *    *    *   *",
-        ]),
-        ("0,1-5/2  *    *    *   *", [
-            "0  *    *    *   *",
-            "1  *    *    *   *",
-            "3  *    *    *   *",
-            "5  *    *    *   *",
-        ]),
-        ("10,5/20  *    *    *   *", [
-            "5   *    *    *   *",
-            "10  *    *    *   *",
-            "25  *    *    *   *",
-            "45  *    *    *   *",
-        ]),
-        ("10,*/20  *    *    *   *", [
-            "*/20   *    *    *   *",
-            "10  *    *    *   *",
-        ]),
-        ("0,1  0,1    *    *   *", [
-            "0  0    *    *   *",
-            "0  1    *    *   *",
-            "1  0    *    *   *",
-            "1  1    *    *   *",
-        ]),
-        ("0-1  0-2    *    *   *", [
-            "0  0    *    *   *",
-            "0  1    *    *   *",
-            "0  2    *    *   *",
-            "1  0    *    *   *",
-            "1  1    *    *   *",
-            "1  2    *    *   *",
-        ]),
+        ("0,1  *    *    *   *", ["0  *    *    *   *", "1  *    *    *   *"]),
+        (
+            "1-3  *    *    *   *",
+            [
+                "1  *    *    *   *",
+                "2  *    *    *   *",
+                "3  *    *    *   *",
+            ],
+        ),
+        (
+            "0,1-3  *    *    *   *",
+            [
+                "0  *    *    *   *",
+                "1  *    *    *   *",
+                "2  *    *    *   *",
+                "3  *    *    *   *",
+            ],
+        ),
+        (
+            "0,1-5/2  *    *    *   *",
+            [
+                "0  *    *    *   *",
+                "1  *    *    *   *",
+                "3  *    *    *   *",
+                "5  *    *    *   *",
+            ],
+        ),
+        (
+            "10,5/20  *    *    *   *",
+            [
+                "5   *    *    *   *",
+                "10  *    *    *   *",
+                "25  *    *    *   *",
+                "45  *    *    *   *",
+            ],
+        ),
+        (
+            "10,*/20  *    *    *   *",
+            [
+                "*/20   *    *    *   *",
+                "10  *    *    *   *",
+            ],
+        ),
+        (
+            "0,1  0,1    *    *   *",
+            [
+                "0  0    *    *   *",
+                "0  1    *    *   *",
+                "1  0    *    *   *",
+                "1  1    *    *   *",
+            ],
+        ),
+        (
+            "0-1  0-2    *    *   *",
+            [
+                "0  0    *    *   *",
+                "0  1    *    *   *",
+                "0  2    *    *   *",
+                "1  0    *    *   *",
+                "1  1    *    *   *",
+                "1  2    *    *   *",
+            ],
+        ),
         # ("*/2  */2    *    *   *", [
         #     "*/2 *    *    *   *",
         #     "0   */2  *    *   *",
         # ]),
-    ]
+    ],
 )
 def test_simplify_crontab_format(crontab_format, expected_crontab_format_list):
     expected_crontab_format_list = sorted(expected_crontab_format_list)
@@ -120,38 +142,56 @@ def test_simplify_crontab_format(crontab_format, expected_crontab_format_list):
         assert expected == result
 
 
-@ pytest.mark.parametrize(
+@pytest.mark.parametrize(
     ("crontab_format", "expected_job_list"),
     [
-        ("*       *   *   *   *", [
-            schedule.every(1).minute.at(":00").do(print),
-        ]),
-        ("1       *   *   *   *", [
-            schedule.every(1).hour.at(":01").do(print),
-        ]),
-        ("0,1     *   *   *   *", [
-            schedule.every(1).hour.at(":00").do(print),
-            schedule.every(1).hour.at(":01").do(print),
-        ]),
-        ("0-2      *   *   *   *", [
-            schedule.every(1).hour.at(":00").do(print),
-            schedule.every(1).hour.at(":01").do(print),
-            schedule.every(1).hour.at(":02").do(print),
-        ]),
-        ("1-7/2    *   *   *   *", [
-            schedule.every(1).hour.at(":01").do(print),
-            schedule.every(1).hour.at(":03").do(print),
-            schedule.every(1).hour.at(":05").do(print),
-            schedule.every(1).hour.at(":07").do(print),
-        ]),
-        ("0,1-7/2 *   *   *   *", [
-            schedule.every(1).hour.at(":00").do(print),
-            schedule.every(1).hour.at(":01").do(print),
-            schedule.every(1).hour.at(":03").do(print),
-            schedule.every(1).hour.at(":05").do(print),
-            schedule.every(1).hour.at(":07").do(print),
-        ]),
-    ]
+        (
+            "*       *   *   *   *",
+            [
+                schedule.every(1).minute.at(":00").do(print),
+            ],
+        ),
+        (
+            "1       *   *   *   *",
+            [
+                schedule.every(1).hour.at(":01").do(print),
+            ],
+        ),
+        (
+            "0,1     *   *   *   *",
+            [
+                schedule.every(1).hour.at(":00").do(print),
+                schedule.every(1).hour.at(":01").do(print),
+            ],
+        ),
+        (
+            "0-2      *   *   *   *",
+            [
+                schedule.every(1).hour.at(":00").do(print),
+                schedule.every(1).hour.at(":01").do(print),
+                schedule.every(1).hour.at(":02").do(print),
+            ],
+        ),
+        (
+            "1-7/2    *   *   *   *",
+            [
+                schedule.every(1).hour.at(":01").do(print),
+                schedule.every(1).hour.at(":03").do(print),
+                schedule.every(1).hour.at(":05").do(print),
+                schedule.every(1).hour.at(":07").do(print),
+            ],
+        ),
+        (
+            "0,1-7/2 *   *   *   *",
+            [
+                schedule.every(1).hour.at(":00").do(print),
+                schedule.every(1).hour.at(":01").do(print),
+                schedule.every(1).hour.at(":03").do(print),
+                schedule.every(1).hour.at(":05").do(print),
+                schedule.every(1).hour.at(":07").do(print),
+            ],
+        ),
+    ],
 )
 def test_update_scheduler(crontab_format, expected_job_list):
     scheduler = schedule.Scheduler()
@@ -159,6 +199,7 @@ def test_update_scheduler(crontab_format, expected_job_list):
     assert len(scheduler.jobs) == len(expected_job_list)
     for expected_job, job in zip(expected_job_list, scheduler.jobs):
         _check_job_properites(expected_job, job)
+
 
 # @pytest.mark.parametrize(
 #     ("crontab_format", "expected_exception"),

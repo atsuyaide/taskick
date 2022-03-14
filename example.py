@@ -1,8 +1,7 @@
 import argparse
 import datetime
 
-parser = argparse.ArgumentParser(
-    description="This is example procman script.")
+parser = argparse.ArgumentParser(description="This is example procman script.")
 parser.add_argument("--message", default="world!", type=str)
 args = parser.parse_args()
 
