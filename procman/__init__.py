@@ -234,10 +234,10 @@ class TaskRunner:
                 logger.debug(f"Skipped: {task_name}")
                 continue
 
-            script_path = task_detail["script_path"]
-            options_detail = task_detail["options"]
+            commands = task_detail["commands"]
+            options = task_detail["options"]
             execution_detail = task_detail["execution"]
-            cmd = self._get_execution_cmd(script_path, options_detail)
+            cmd = self._get_execution_cmd(commands, options)
 
             if execution_detail["immediate"]:
                 self._execute_cmd(cmd)
@@ -253,26 +253,27 @@ class TaskRunner:
                 pass
             else:
                 raise ValueError
-            logger.info(f"'{task_name}' was Registered.")
+            logger.info(f"Registered: '{task_name}'")
 
-    def _get_execution_cmd(self, file_path: str, options: dict) -> str:
-        """
+    def _get_execution_cmd(self, commands: list, options: dict) -> List[str]:
+        """_summary_
 
         Args:
             file_path (str): _description_
             options (dict): _description_
 
         Returns:
-            str: _description_
+            list: _description_
         """
-        cmd = ["python", file_path]
+        if options is None:
+            return commands
 
         for key, value in options.items():
-            cmd.append(f"--{key}")
+            commands.append(key)
             if value is not None:
-                cmd.append(value)
+                commands.append(value)
 
-        return cmd
+        return commands
 
     def _execute_cmd(self, cmd: list) -> None:
         """_summary_
