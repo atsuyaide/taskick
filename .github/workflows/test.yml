@@ -11,25 +11,25 @@ jobs:
         python_version: ["3.8", "3.9"]
     timeout-minutes: 3
     steps:
-    - name: Checkout
-      uses: actions/checkout@v2
+      - name: Checkout
+        uses: actions/checkout@v2
 
-    - name: Set up Python
-      uses: actions/setup-python@v1
-      with:
-        python-version: ${{ matrix.python_version }}
+      - name: Set up Python
+        uses: actions/setup-python@v1
+        with:
+          python-version: ${{ matrix.python_version }}
 
-    - name: Install dependencies
-      run: |
-        python -m pip install --upgrade pip
-        pip install -r requirements.txt
+      - name: Install dependencies
+        run: |
+          python -m pip install --upgrade pip
+          pip install -r requirements/test.txt
 
-    - name: print to stdout, stderr
-      run: |
-        echo "output to stdout"
-        echo "output to stderr" >&2
+      - name: print to stdout, stderr
+        run: |
+          echo "output to stdout"
+          echo "output to stderr" >&2
 
-    - name: pytest
-      if: matrix.python_version == '3.9'
-      run: |
-        pytest ./tests/
+      - name: pytest
+        if: matrix.python_version == '3.9'
+        run: |
+          pytest ./tests/
