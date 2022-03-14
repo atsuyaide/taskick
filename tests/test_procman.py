@@ -27,11 +27,13 @@ def _check_job_properites(expected_job, job):
 @pytest.mark.parametrize(
     ("crontab_format", "expected_job"),
     [
-        ("*   *   *   *   *", schedule.every(1).minute.do(print)),
-        (" *   *   *   *   * ", schedule.every(1).minute.do(print)),
-        ("*/2 *   *   *   *", schedule.every(2).minutes.do(print)),
-        ("*   */2 *   *   *", schedule.every(2).hours.do(print)),
-        ("*   *   */2 *   *", schedule.every(2).days.do(print)),
+        ("*   *   *   *   *", schedule.every(1).minute.at(":00").do(print)),
+        (" *   *   *   *   * ", schedule.every(1).minute.at(":00").do(print)),
+        ("*/2 *   *   *   *", schedule.every(2).minutes.at(":00").do(print)),
+        ("*   */2 *   *   *", schedule.every(2).hours.at(":00").do(print)),
+        ("59  */2 *   *   *", schedule.every(2).hours.at(":59").do(print)),
+        ("*   23  */2 *   *", schedule.every(2).days.at("23:00").do(print)),
+        ("59  23  */2 *   *", schedule.every(2).days.at("23:59").do(print)),
         # schedule library does not support monthly format
         # ("*    *    *    */2 *", schedule.every(2).month.do(print)),
         ("1   *   *   *   *", schedule.every(1).hour.at(":01").do(print)),
@@ -90,6 +92,24 @@ def test_set_scheduled_job(crontab_format, expected_job):
             "*/20   *    *    *   *",
             "10  *    *    *   *",
         ]),
+        ("0,1  0,1    *    *   *", [
+            "0  0    *    *   *",
+            "0  1    *    *   *",
+            "1  0    *    *   *",
+            "1  1    *    *   *",
+        ]),
+        ("0-1  0-2    *    *   *", [
+            "0  0    *    *   *",
+            "0  1    *    *   *",
+            "0  2    *    *   *",
+            "1  0    *    *   *",
+            "1  1    *    *   *",
+            "1  2    *    *   *",
+        ]),
+        # ("*/2  */2    *    *   *", [
+        #     "*/2 *    *    *   *",
+        #     "0   */2  *    *   *",
+        # ]),
     ]
 )
 def test_simplify_crontab_format(crontab_format, expected_crontab_format_list):
@@ -103,11 +123,11 @@ def test_simplify_crontab_format(crontab_format, expected_crontab_format_list):
         assert expected == result
 
 
-@pytest.mark.parametrize(
+@ pytest.mark.parametrize(
     ("crontab_format", "expected_job_list"),
     [
         ("*       *   *   *   *", [
-            schedule.every(1).minute.do(print),
+            schedule.every(1).minute.at(":00").do(print),
         ]),
         ("1       *   *   *   *", [
             schedule.every(1).hour.at(":01").do(print),

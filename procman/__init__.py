@@ -74,29 +74,35 @@ def set_scheduled_job(scheduler: schedule.Scheduler, crontab_format: str, task: 
         schedule.Scheduler: _description_
     """
     if re.match("^( *\\*){5} *$", crontab_format):
-        return set_scheduled_job(scheduler, "*/1 * * * *", task)
-
-    cron_values = crontab_format.split()[::-1]
-    every = 1
-    unit_method_is_called = False
-    every_method_is_called = False
+        crontab_format = "*/1 * * * *"
 
     if "/" in crontab_format:
-        at_time = None
+        time_values = crontab_format.split("/")[0]
     else:
-        time_values = crontab_format.split()[:-1][::-1]
-        time_values = list(filter(lambda x: x != "*", time_values))
-        time_values = list(map(int, time_values))
+        time_values = crontab_format
 
-        if len(time_values) == 1:
-            at_time = ":{:02}".format(time_values[0])
-        elif len(time_values) == 2:
-            at_time = "{:02}:{:02}:00".format(time_values[0], time_values[1])
-        else:
-            raise CrontabFormatError("Invalid format.")
+    time_values = time_values.split()[:-1][::-1]
+    time_values = [x.zfill(2) for x in time_values]
 
-        at_time = at_time.replace("*", "")
+    if len(time_values) == 0:
+        hh, mm, ss = "00", "00", "00"
+    elif len(time_values) == 1:
+        hh, mm, ss = "00", time_values[0], "00"
+    elif len(time_values) == 2:
+        hh, mm, ss = time_values[0], time_values[1], "00"
+    elif len(time_values) == 3:
+        hh, mm, ss = "00", time_values[1], time_values[2]
+    elif len(time_values) == 4:
+        hh, mm, ss = time_values[2], time_values[3], "00"
+    else:
+        raise CrontabFormatError("Invalid format.")
 
+    every = 1
+    every_method_is_called = False
+    unit = None
+    unit_method_is_called = False
+
+    cron_values = crontab_format.split()[::-1]
     for i, unit_str in enumerate(cron_values):
         if unit_str == "*":
             continue
@@ -109,8 +115,7 @@ def set_scheduled_job(scheduler: schedule.Scheduler, crontab_format: str, task: 
                 if re.match("^\\*/\\d+$", unit_str):
                     every = int(unit_str.split('/')[-1])
                     unit = UNITS[i]
-                else:
-                    # In the case of time specification, the time unit is shifted by -1.
+                elif unit is None:
                     # Run every 23:59 -> Daily
                     # Run every   :59 -> hourly
                     unit = UNITS[i - 1]
@@ -125,9 +130,18 @@ def set_scheduled_job(scheduler: schedule.Scheduler, crontab_format: str, task: 
                 unit += "s"
             job = getattr(job, unit)
 
-    if at_time is not None:
-        # print(at_time)
-        job = job.at(at_time)
+    # - For daily jobs -> `HH:MM:SS` or `HH:MM`
+    # - For hourly jobs -> `MM:SS` or `:MM`
+    # - For minute jobs -> `:SS`
+    if "day" in unit:
+        at_time = f"{hh}:{mm}:{ss}"
+    elif "hour" in unit:
+        at_time = f"{mm}:{ss}"
+    elif "minute" in unit:
+        at_time = f":{ss}"
+
+    at_time = at_time.replace("0*", "00")
+    job = job.at(at_time)
 
     job.do(task, *args, **kwargs)
     logger.debug(f"Added: {repr(job)}")
