@@ -1,7 +1,8 @@
-import sys
-import logging
 import argparse
+import logging
+import sys
 from logging import getLogger
+
 from procman import TaskRunner
 
 parser = argparse.ArgumentParser()

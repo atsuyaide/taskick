@@ -1,5 +1,5 @@
-import datetime
 import argparse
+import datetime
 
 parser = argparse.ArgumentParser(
     description="This is example procman script.")

@@ -1,14 +1,15 @@
 __version__ = "0.1.0"
 
 
-import re
-import time
-import yaml
-import logging
-import schedule
 import itertools
+import logging
+import re
 import subprocess
+import time
 from typing import Callable, List
+
+import schedule
+import yaml
 
 logger = logging.getLogger('procman')
 
