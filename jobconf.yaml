@@ -55,6 +55,6 @@ example_time_trigger_process_4:
     - Hello Procman! このプロセスは毎分ターミナル上で実行されます.
   execution:
     event_type: time
-    immediate: true
+    immediate: false
     when: "*/1 * * * *"
   options:

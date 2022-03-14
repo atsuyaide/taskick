@@ -130,7 +130,7 @@ def set_scheduled_job(scheduler: schedule.Scheduler, crontab_format: str, task: 
         job = job.at(at_time)
 
     job.do(task, *args, **kwargs)
-    logger.debug(f"Added a job: {repr(job)}")
+    logger.debug(f"Added: {repr(job)}")
     return scheduler
 
 
@@ -229,7 +229,7 @@ class TaskRunner:
             config = yaml.safe_load(f)
 
         for task_name, task_detail in config.items():
-            logger.debug(f"{task_name}: {task_detail}")
+            logger.debug(f"Processing: {task_name}: {task_detail}")
             if task_detail['status'] != 1:
                 logger.debug(f"Skipped: {task_name}")
                 continue
@@ -239,14 +239,11 @@ class TaskRunner:
             execution_detail = task_detail["execution"]
             cmd = self._get_execution_cmd(commands, options)
 
-            if execution_detail["immediate"]:
-                self._execute_cmd(cmd)
-
             if execution_detail["event_type"] == "time":
                 self.scheduler = update_scheduler(
                     self.scheduler,
                     execution_detail["when"],
-                    self._execute_cmd,
+                    self._execute_job,
                     cmd
                 )
             elif execution_detail["event_type"] == "file":
@@ -254,6 +251,10 @@ class TaskRunner:
             else:
                 raise ValueError
             logger.info(f"Registered: '{task_name}'")
+
+            if execution_detail["immediate"]:
+                logger.info('Immediate execution option is selected.')
+                self._execute_job(cmd)
 
     def _get_execution_cmd(self, commands: list, options: dict) -> List[str]:
         """_summary_
@@ -275,14 +276,13 @@ class TaskRunner:
 
         return commands
 
-    def _execute_cmd(self, cmd: list) -> None:
+    def _execute_job(self, commands: list) -> None:
         """_summary_
 
         Args:
-            cmd (list): _description_
+            commands (list): _description_
         """
-        logger.debug('Started: ' + " ".join(cmd))
-        subprocess.Popen(cmd)
+        subprocess.Popen(commands)
 
     def run(self) -> None:
         """_summary_
