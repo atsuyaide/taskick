@@ -257,9 +257,7 @@ class TaskRunner:
             cmd = self._get_execution_cmd(commands, options)
 
             if execution_detail["event_type"] == "time":
-                self.scheduler = update_scheduler(
-                    self.scheduler, execution_detail["when"], self._execute_job, cmd
-                )
+                self.scheduler = update_scheduler(self.scheduler, execution_detail["when"], self._execute_job, cmd)
             elif execution_detail["event_type"] == "file":
                 pass
             else:

@@ -1,12 +1,7 @@
 import pytest
 import schedule
 
-from procman import (
-    __version__,
-    set_scheduled_job,
-    simplify_crontab_format,
-    update_scheduler,
-)
+from procman import __version__, set_scheduled_job, simplify_crontab_format, update_scheduler
 
 
 def test_version():
