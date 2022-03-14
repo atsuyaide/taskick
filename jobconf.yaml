@@ -52,7 +52,7 @@ example_time_trigger_process_4:
   status: 1
   commands:
     - echo
-    - Hello Procman! This process runs every 1 minute on terminal.
+    - Hello Procman! このプロセスは毎分ターミナル上で実行されます.
   execution:
     event_type: time
     immediate: true
