@@ -18,16 +18,7 @@ if args.debug:
 def main() -> None:
     """_summary_"""
     TR = TaskRunner(args.file)
-
-    try:
-        TR.run()
-    except KeyboardInterrupt:
-        logger.debug("Ctrl-C detected.")
-    except Exception as e:
-        logger.error(e)
-        import traceback
-
-        traceback.print_exc()
+    TR.run()
 
 
 if __name__ == "__main__":

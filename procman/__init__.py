@@ -1,6 +1,7 @@
 __version__ = "0.1.0"
 
 
+import importlib
 import itertools
 import logging
 import re
@@ -8,8 +9,9 @@ import subprocess
 import time
 from typing import Callable, List
 
-import schedule
 import yaml
+from schedule import Scheduler
+from watchdog.observers.polling import PollingObserver as Observer
 
 logger = logging.getLogger("procman")
 
@@ -25,12 +27,6 @@ class CrontabFormatError(ProcmanError):
 
     pass
 
-
-EVENT_TYPE_MOVED = "moved"
-EVENT_TYPE_DELETED = "deleted"
-EVENT_TYPE_CREATED = "created"
-EVENT_TYPE_MODIFIED = "modified"
-EVENT_TYPE_CLOSED = "closed"
 
 WEEKS = [
     "sunday",
@@ -60,13 +56,11 @@ UNITS_UPPER = {
 }
 
 
-def set_scheduled_job(
-    scheduler: schedule.Scheduler, crontab_format: str, task: Callable, *args, **kwargs
-) -> schedule.Scheduler:
+def set_scheduled_job(scheduler: Scheduler, crontab_format: str, task: Callable, *args, **kwargs) -> Scheduler:
     """_summary_
 
     Args:
-        scheduler (schedule.Scheduler): _description_
+        scheduler (Scheduler): _description_
         crontab_format (str): _description_
         task (Callable): _description_
 
@@ -74,7 +68,7 @@ def set_scheduled_job(
         CrontabFormatError: _description_
 
     Returns:
-        schedule.Scheduler: _description_
+        Scheduler: _description_
     """
     if re.match("^( *\\*){5} *$", crontab_format):
         crontab_format = "*/1 * * * *"
@@ -202,18 +196,16 @@ def simplify_crontab_format(crontab_format: str) -> List[str]:
     return simple_form_list
 
 
-def update_scheduler(
-    scheduler: schedule.Scheduler, crontab_format: str, task: Callable, *args, **kwargs
-) -> schedule.Scheduler:
+def update_scheduler(scheduler: Scheduler, crontab_format: str, task: Callable, *args, **kwargs) -> Scheduler:
     """_summary_
 
     Args:
-        scheduler (schedule.Scheduler): _description_
+        scheduler (Scheduler): _description_
         crontab_format (str): _description_
         task (Callable): _description_
 
     Returns:
-        schedule.Scheduler: _description_
+        Scheduler: _description_
     """
     crontab_format_list = simplify_crontab_format(crontab_format)
 
@@ -225,6 +217,10 @@ def update_scheduler(
 
 def get_observer(folder_path: str, event_type: str):
     pass
+
+
+def example(event):
+    logger.info(event.src_path)
 
 
 class TaskRunner:
@@ -239,8 +235,9 @@ class TaskRunner:
         Raises:
             ValueError: _description_
         """
-        self.scheduler = schedule.Scheduler()
-        self.observer = None
+        self.scheduler = Scheduler()
+        self.observer = Observer()
+        EventHandlers = importlib.import_module("watchdog.events")
 
         with open(job_config, "r", encoding="utf-8") as f:
             config = yaml.safe_load(f)
@@ -257,9 +254,22 @@ class TaskRunner:
             cmd = self._get_execution_cmd(commands, options)
 
             if execution_detail["event_type"] == "time":
-                self.scheduler = update_scheduler(self.scheduler, execution_detail["when"], self._execute_job, cmd)
+                schedule_detail = execution_detail["detail"]
+                when_detail = schedule_detail["when"]
+                self.scheduler = update_scheduler(self.scheduler, when_detail, self._execute_job, cmd)
             elif execution_detail["event_type"] == "file":
-                pass
+                observe_detail = execution_detail["detail"]
+                handler_detail = observe_detail["handler"]
+                event_type_detail = observe_detail["when"]
+
+                handler = getattr(EventHandlers, handler_detail["name"])(**handler_detail["args"])
+                for event_type in event_type_detail:
+                    setattr(handler, f"on_{event_type}", example)
+
+                del observe_detail["handler"]
+                del observe_detail["when"]
+                observe_detail["event_handler"] = handler
+                self.observer.schedule(**observe_detail)
             else:
                 raise ValueError
             logger.info(f"Registered: '{task_name}'")
@@ -298,6 +308,19 @@ class TaskRunner:
 
     def run(self) -> None:
         """_summary_"""
-        while True:
-            self.scheduler.run_pending()
-            time.sleep(1)
+
+        self.observer.start()
+        try:
+            while True:
+                self.scheduler.run_pending()
+                time.sleep(1)
+        except KeyboardInterrupt:
+            logger.debug("Ctrl-C detected.")
+            self.observer.stop()
+        except Exception as e:
+            logger.error(e)
+            import traceback
+
+            traceback.print_exc()
+
+        self.observer.join()
