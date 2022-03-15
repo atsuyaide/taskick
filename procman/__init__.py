@@ -11,7 +11,9 @@ from typing import Callable, List
 
 import yaml
 from schedule import Scheduler
-from watchdog.observers.polling import PollingObserver as Observer
+from watchdog.observers import Observer
+
+# from watchdog.observers.polling import PollingObserver as Observer
 
 logger = logging.getLogger("procman")
 
@@ -215,10 +217,6 @@ def update_scheduler(scheduler: Scheduler, crontab_format: str, task: Callable, 
     return scheduler
 
 
-def get_observer(folder_path: str, event_type: str):
-    pass
-
-
 def example(event):
     logger.info(event.src_path)
 
@@ -251,6 +249,7 @@ class TaskRunner:
             commands = task_detail["commands"]
             options = task_detail["options"]
             execution_detail = task_detail["execution"]
+
             cmd = self._get_execution_cmd(commands, options)
 
             if execution_detail["event_type"] == "time":
@@ -262,7 +261,12 @@ class TaskRunner:
                 handler_detail = observe_detail["handler"]
                 event_type_detail = observe_detail["when"]
 
-                handler = getattr(EventHandlers, handler_detail["name"])(**handler_detail["args"])
+                if "args" in handler_detail.keys():
+                    print(handler_detail["args"])
+                    handler = getattr(EventHandlers, handler_detail["name"])(**handler_detail["args"])
+                else:
+                    handler = getattr(EventHandlers, handler_detail["name"])()
+
                 for event_type in event_type_detail:
                     setattr(handler, f"on_{event_type}", example)
 
@@ -272,6 +276,7 @@ class TaskRunner:
                 self.observer.schedule(**observe_detail)
             else:
                 raise ValueError
+
             logger.info(f"Registered: '{task_name}'")
 
             if execution_detail["immediate"]:
@@ -310,6 +315,7 @@ class TaskRunner:
         """_summary_"""
 
         self.observer.start()
+
         try:
             while True:
                 self.scheduler.run_pending()

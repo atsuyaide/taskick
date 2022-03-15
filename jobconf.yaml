@@ -10,7 +10,7 @@
 
 example_time_trigger_process_1:
   # Run every minute. -> "python ./example.py --message 'procman! thi...'"
-  status: 1
+  status: 0
   commands:
     - python
     - ./example.py
@@ -24,7 +24,7 @@ example_time_trigger_process_1:
 
 example_time_trigger_process_2:
   # Run every 2 minutes. -> "python ./example.py --message 'procman! thi...'"
-  status: 1
+  status: 0
   commands:
     - python
     - ./example.py
@@ -52,7 +52,7 @@ example_time_trigger_process_3:
 
 example_time_trigger_process_4:
   # Run every 1 minutes. -> "echo 'Hello Procaman! This...'"
-  status: 1
+  status: 0
   commands:
     - echo
     - Hello Procman! このプロセスは毎分ターミナル上で実行されます.
@@ -64,7 +64,7 @@ example_time_trigger_process_4:
   options:
 
 example_file_trigger_process_1:
-  # Run modified in $PATH. -> python ./example.py --message 'procman! thi...'
+  # Run modified in ./ -> python ./example.py --message 'procman! thi...'
   status: 1
   commands:
     - python
@@ -74,6 +74,29 @@ example_file_trigger_process_1:
     event_type: file
     detail:
       path: ./
+      recursive: false
+      handler:
+        name: LoggingEventHandler
+      when:
+        # - "moved"
+        # - "deleted"
+        - "created"
+        - "modified"
+        # - "closed"
+  options:
+    --message: Procman! This process runs created or modified in observe dir.
+
+example_file_trigger_process_2:
+  # Run modified in ./sandbox/*.(txt|csv) -> python ./example.py --message 'procman! thi...'
+  status: 1
+  commands:
+    - python
+    - ./example.py
+  execution:
+    immediate: false
+    event_type: file
+    detail:
+      path: ./sandbox
       recursive: false
       handler:
         name: PatternMatchingEventHandler
