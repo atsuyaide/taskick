@@ -10,7 +10,7 @@
 
 example_time_trigger_process_1:
   # Run every minute. -> "python ./example.py --message 'procman! thi...'"
-  status: 0
+  status: 1
   commands:
     - python
     - ./example.py
@@ -24,7 +24,7 @@ example_time_trigger_process_1:
 
 example_time_trigger_process_2:
   # Run every 2 minutes. -> "python ./example.py --message 'procman! thi...'"
-  status: 0
+  status: 1
   commands:
     - python
     - ./example.py
@@ -38,7 +38,7 @@ example_time_trigger_process_2:
 
 example_time_trigger_process_3:
   # Run every 2 minutes. But inactive.
-  status: 0
+  status: 1
   commands:
     - python
     - ./example.py
@@ -52,7 +52,7 @@ example_time_trigger_process_3:
 
 example_time_trigger_process_4:
   # Run every 1 minutes. -> "echo 'Hello Procaman! This...'"
-  status: 0
+  status: 1
   commands:
     - echo
     - Hello Procman! このプロセスは毎分ターミナル上で実行されます.
@@ -90,8 +90,8 @@ example_file_trigger_process_2:
   # Run modified in ./sandbox/*.(txt|csv) -> python ./example.py --message 'procman! thi...'
   status: 1
   commands:
-    - python
-    - ./example.py
+    - echo
+    - aaa
   execution:
     immediate: false
     event_type: file
@@ -102,7 +102,7 @@ example_file_trigger_process_2:
         name: PatternMatchingEventHandler
         args:
           patterns:
-            - "*.txt"
+            - "*.py"
             - "*.csv"
       when:
         # - "moved"
@@ -111,4 +111,3 @@ example_file_trigger_process_2:
         - "modified"
         # - "closed"
   options:
-    --message: Procman! This process runs created or modified in observe dir.

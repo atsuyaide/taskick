@@ -217,8 +217,19 @@ def update_scheduler(scheduler: Scheduler, crontab_format: str, task: Callable, 
     return scheduler
 
 
-def example(event):
-    logger.info(event.src_path)
+class CommandExecuter:
+    def __init__(self, commands: List[str]) -> None:
+        self.commands = commands
+
+    def execute_for_observer(self, event) -> None:
+        logger.info(event)
+        self._execute()
+
+    def execute_for_scheduler(self) -> None:
+        self._execute()
+
+    def _execute(self) -> None:
+        subprocess.Popen(self.commands)
 
 
 class TaskRunner:
@@ -235,6 +246,7 @@ class TaskRunner:
         """
         self.scheduler = Scheduler()
         self.observer = Observer()
+
         EventHandlers = importlib.import_module("watchdog.events")
 
         with open(job_config, "r", encoding="utf-8") as f:
@@ -250,25 +262,26 @@ class TaskRunner:
             options = task_detail["options"]
             execution_detail = task_detail["execution"]
 
-            cmd = self._get_execution_cmd(commands, options)
+            commands = self._get_execution_commands(commands, options)
+            CE = CommandExecuter(commands)
 
             if execution_detail["event_type"] == "time":
                 schedule_detail = execution_detail["detail"]
                 when_detail = schedule_detail["when"]
-                self.scheduler = update_scheduler(self.scheduler, when_detail, self._execute_job, cmd)
+                # self.scheduler = update_scheduler(self.scheduler, when_detail, self._execute_job, commands)
+                self.scheduler = update_scheduler(self.scheduler, when_detail, CE.execute_for_scheduler)
             elif execution_detail["event_type"] == "file":
                 observe_detail = execution_detail["detail"]
                 handler_detail = observe_detail["handler"]
                 event_type_detail = observe_detail["when"]
 
                 if "args" in handler_detail.keys():
-                    print(handler_detail["args"])
                     handler = getattr(EventHandlers, handler_detail["name"])(**handler_detail["args"])
                 else:
                     handler = getattr(EventHandlers, handler_detail["name"])()
 
                 for event_type in event_type_detail:
-                    setattr(handler, f"on_{event_type}", example)
+                    setattr(handler, f"on_{event_type}", CE.execute_for_observer)
 
                 del observe_detail["handler"]
                 del observe_detail["when"]
@@ -281,9 +294,9 @@ class TaskRunner:
 
             if execution_detail["immediate"]:
                 logger.info("Immediate execution option is selected.")
-                self._execute_job(cmd)
+                self._execute_job(commands)
 
-    def _get_execution_cmd(self, commands: list, options: dict) -> List[str]:
+    def _get_execution_commands(self, commands: list, options: dict) -> List[str]:
         """_summary_
 
         Args:
@@ -303,7 +316,10 @@ class TaskRunner:
 
         return commands
 
-    def _execute_job(self, commands: list) -> None:
+    def _execute_job_file_trigger(self, event):
+        logger.info(event)
+
+    def _execute_job(self, commands: List[str]) -> None:
         """_summary_
 
         Args:
