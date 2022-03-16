@@ -11,9 +11,7 @@ from typing import Callable, List, Tuple
 
 import yaml
 from schedule import Scheduler
-from watchdog.observers import Observer
-
-# from watchdog.observers.polling import PollingObserver as Observer
+from watchdog.observers.polling import PollingObserver as Observer
 
 logger = logging.getLogger("procman")
 
@@ -369,9 +367,9 @@ class TaskRunner:
             logger.debug("Ctrl-C detected.")
             self.observer.stop()
         except Exception as e:
-            logger.error(e)
             import traceback
 
+            logger.error(e)
             traceback.print_exc()
-
-        self.observer.join()
+        finally:
+            self.observer.join()
