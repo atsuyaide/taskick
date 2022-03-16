@@ -1,36 +1,20 @@
 __version__ = "0.1.0"
 
 
+import importlib
 import itertools
 import logging
 import re
 import subprocess
 import time
-from typing import Callable, List
+from typing import Callable, List, Tuple
 
-import schedule
 import yaml
+from schedule import Scheduler
+from watchdog.observers.polling import PollingObserver as Observer
 
 logger = logging.getLogger("procman")
 
-
-class ProcmanError(Exception):
-    """Base Procaman exception"""
-
-    pass
-
-
-class CrontabFormatError(ProcmanError):
-    """An improper crontab format was used"""
-
-    pass
-
-
-EVENT_TYPE_MOVED = "moved"
-EVENT_TYPE_DELETED = "deleted"
-EVENT_TYPE_CREATED = "created"
-EVENT_TYPE_MODIFIED = "modified"
-EVENT_TYPE_CLOSED = "closed"
 
 WEEKS = [
     "sunday",
@@ -60,21 +44,19 @@ UNITS_UPPER = {
 }
 
 
-def set_scheduled_job(
-    scheduler: schedule.Scheduler, crontab_format: str, task: Callable, *args, **kwargs
-) -> schedule.Scheduler:
+def set_scheduled_job(scheduler: Scheduler, crontab_format: str, task: Callable, *args, **kwargs) -> Scheduler:
     """_summary_
 
     Args:
-        scheduler (schedule.Scheduler): _description_
+        scheduler (Scheduler): _description_
         crontab_format (str): _description_
         task (Callable): _description_
 
     Raises:
-        CrontabFormatError: _description_
+        ValueError: _description_
 
     Returns:
-        schedule.Scheduler: _description_
+        Scheduler: _description_
     """
     if re.match("^( *\\*){5} *$", crontab_format):
         crontab_format = "*/1 * * * *"
@@ -98,7 +80,7 @@ def set_scheduled_job(
     elif len(time_values) == 4:
         hh, mm, ss = time_values[2], time_values[3], "00"
     else:
-        raise CrontabFormatError("Invalid format.")
+        raise ValueError("Invalid format.")
 
     every = 1
     every_method_is_called = False
@@ -158,15 +140,15 @@ def simplify_crontab_format(crontab_format: str) -> List[str]:
         crontab_format (str): _description_
 
     Raises:
-        CrontabFormatError: _description_
-        CrontabFormatError: _description_
+        ValueError: _description_
+        ValueError: _description_
 
     Returns:
         List[str]: _description_
     """
     cron_values = crontab_format.split()
     if len(cron_values) != 5:
-        raise CrontabFormatError("Must consist of five elements.")
+        raise ValueError("Must consist of five elements.")
 
     cron_values = [x.split(",") for x in cron_values]
 
@@ -192,7 +174,7 @@ def simplify_crontab_format(crontab_format: str) -> List[str]:
                 s, e = map(int, unit_str.split("-"))
                 e += 1
             else:
-                raise CrontabFormatError
+                raise ValueError
 
             cv_list.extend(list(map(str, list(range(s, e, int(interval))))))
         merged_cron_str_list.append(cv_list)
@@ -202,18 +184,16 @@ def simplify_crontab_format(crontab_format: str) -> List[str]:
     return simple_form_list
 
 
-def update_scheduler(
-    scheduler: schedule.Scheduler, crontab_format: str, task: Callable, *args, **kwargs
-) -> schedule.Scheduler:
+def update_scheduler(scheduler: Scheduler, crontab_format: str, task: Callable, *args, **kwargs) -> Scheduler:
     """_summary_
 
     Args:
-        scheduler (schedule.Scheduler): _description_
+        scheduler (Scheduler): _description_
         crontab_format (str): _description_
         task (Callable): _description_
 
     Returns:
-        schedule.Scheduler: _description_
+        Scheduler: _description_
     """
     crontab_format_list = simplify_crontab_format(crontab_format)
 
@@ -223,8 +203,135 @@ def update_scheduler(
     return scheduler
 
 
-def get_observer(folder_path: str, event_type: str):
-    pass
+def update_observer(observer: Observer, observe_detail: dict, task: Callable) -> Observer:
+    """_summary_
+
+    Args:
+        observer (Observer): _description_
+        observe_detail (dict): _description_
+        task (Callable): _description_
+
+    Returns:
+        Observer: _description_
+    """
+
+    handler_detail = observe_detail["handler"]
+    event_type_detail = observe_detail["when"]
+
+    EventHandlers = importlib.import_module("watchdog.events")
+
+    if "args" in handler_detail.keys():
+        handler = getattr(EventHandlers, handler_detail["name"])(**handler_detail["args"])
+    else:
+        handler = getattr(EventHandlers, handler_detail["name"])()
+
+    for event_type in event_type_detail:
+        setattr(handler, f"on_{event_type}", task)
+
+    del observe_detail["handler"]
+    del observe_detail["when"]
+    observe_detail["event_handler"] = handler
+
+    observer.schedule(**observe_detail)
+    return observer
+
+
+def get_execution_commands(commands: list, options: dict) -> List[str]:
+    """_summary_
+
+    Args:
+        commands (list): _description_
+        options (dict): _description_
+
+    Returns:
+        List[str]: _description_
+    """
+    if options is None:
+        return commands
+
+    for key, value in options.items():
+        commands.append(key)
+        if value is not None:
+            commands.append(value)
+
+    return commands
+
+
+class CommandExecuter:
+    """_summary_"""
+
+    def __init__(self, commands: List[str]) -> None:
+        """_summary_
+
+        Args:
+            commands (List[str]): _description_
+        """
+        self.commands = commands
+
+    def execute_by_observer(self, event) -> None:
+        """_summary_
+
+        Args:
+            event (_type_): _description_
+        """
+        logger.info(event)
+        self.execute()
+
+    def execute_by_scheduler(self) -> None:
+        """_summary_"""
+        self.execute()
+
+    def execute(self) -> None:
+        """_summary_"""
+        subprocess.Popen(self.commands)
+
+
+def load_config(config: dict) -> Tuple[Scheduler, Observer, List[CommandExecuter]]:
+    """_summary_
+
+    Args:
+        config (dict): _description_
+
+    Raises:
+        ValueError: _description_
+
+    Returns:
+        Tuple[Scheduler, Observer, List[CommandExecuter]]: _description_
+    """
+    scheduler = Scheduler()
+    observer = Observer()
+    immediate_execution_CE: List[CommandExecuter] = []
+    for task_name, task_detail in config.items():
+        logger.debug(f"Processing: {task_name}: {task_detail}")
+        if task_detail["status"] != 1:
+            logger.debug(f"Skipped: {task_name}")
+            continue
+
+        commands = task_detail["commands"]
+        execution_detail = task_detail["execution"]
+
+        if "options" in task_detail.keys():
+            options = task_detail["options"]
+            commands = get_execution_commands(commands, options)
+
+        CE = CommandExecuter(commands)
+
+        if execution_detail["event_type"] == "time":
+            schedule_detail = execution_detail["detail"]
+            scheduler = update_scheduler(scheduler, schedule_detail["when"], CE.execute_by_scheduler)
+        elif execution_detail["event_type"] == "file":
+            observe_detail = execution_detail["detail"]
+            observer = update_observer(observer, observe_detail, CE.execute_by_observer)
+        else:
+            raise ValueError("'{:}' is not defined.".format(execution_detail["event_type"]))
+
+        logger.info(f"Registered: '{task_name}'")
+
+        if execution_detail["immediate"]:
+            logger.info("Immediate execution option is selected.")
+            immediate_execution_CE.append(CE)
+
+    return scheduler, observer, immediate_execution_CE
 
 
 class TaskRunner:
@@ -239,65 +346,30 @@ class TaskRunner:
         Raises:
             ValueError: _description_
         """
-        self.scheduler = schedule.Scheduler()
-        self.observer = None
-
         with open(job_config, "r", encoding="utf-8") as f:
             config = yaml.safe_load(f)
 
-        for task_name, task_detail in config.items():
-            logger.debug(f"Processing: {task_name}: {task_detail}")
-            if task_detail["status"] != 1:
-                logger.debug(f"Skipped: {task_name}")
-                continue
+        self.scheduler, self.observer, immediate_execution_CE = load_config(config)
 
-            commands = task_detail["commands"]
-            options = task_detail["options"]
-            execution_detail = task_detail["execution"]
-            cmd = self._get_execution_cmd(commands, options)
-
-            if execution_detail["event_type"] == "time":
-                self.scheduler = update_scheduler(self.scheduler, execution_detail["when"], self._execute_job, cmd)
-            elif execution_detail["event_type"] == "file":
-                pass
-            else:
-                raise ValueError
-            logger.info(f"Registered: '{task_name}'")
-
-            if execution_detail["immediate"]:
-                logger.info("Immediate execution option is selected.")
-                self._execute_job(cmd)
-
-    def _get_execution_cmd(self, commands: list, options: dict) -> List[str]:
-        """_summary_
-
-        Args:
-            file_path (str): _description_
-            options (dict): _description_
-
-        Returns:
-            list: _description_
-        """
-        if options is None:
-            return commands
-
-        for key, value in options.items():
-            commands.append(key)
-            if value is not None:
-                commands.append(value)
-
-        return commands
-
-    def _execute_job(self, commands: list) -> None:
-        """_summary_
-
-        Args:
-            commands (list): _description_
-        """
-        subprocess.Popen(commands)
+        for CE in immediate_execution_CE:
+            CE.execute()
 
     def run(self) -> None:
         """_summary_"""
-        while True:
-            self.scheduler.run_pending()
-            time.sleep(1)
+
+        self.observer.start()
+
+        try:
+            while True:
+                self.scheduler.run_pending()
+                time.sleep(1)
+        except KeyboardInterrupt:
+            logger.debug("Ctrl-C detected.")
+            self.observer.stop()
+        except Exception as e:
+            import traceback
+
+            logger.error(e)
+            traceback.print_exc()
+        finally:
+            self.observer.join()

@@ -1,33 +1,26 @@
 import argparse
 import logging
 import sys
-from logging import getLogger
 
 from procman import TaskRunner
-
-parser = argparse.ArgumentParser()
-parser.add_argument("--debug", action="store_true")
-parser.add_argument("--file", "-f", type=str, default="./jobconf.yaml")
-args = parser.parse_args()
-
-logger = getLogger("procman")
-if args.debug:
-    logging.basicConfig(level=logging.DEBUG)
 
 
 def main() -> None:
     """_summary_"""
+    parser = argparse.ArgumentParser()
+    parser.add_argument("--debug", action="store_true")
+    parser.add_argument("--info", action="store_true")
+    parser.add_argument("--file", "-f", type=str, default="./jobconf.yaml")
+    args = parser.parse_args()
+
+    if args.debug:
+        logging.basicConfig(level=logging.DEBUG)
+
+    if args.info:
+        logging.basicConfig(level=logging.INFO)
+
     TR = TaskRunner(args.file)
-
-    try:
-        TR.run()
-    except KeyboardInterrupt:
-        logger.debug("Ctrl-C detected.")
-    except Exception as e:
-        logger.error(e)
-        import traceback
-
-        traceback.print_exc()
+    TR.run()
 
 
 if __name__ == "__main__":
