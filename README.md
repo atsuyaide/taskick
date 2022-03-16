@@ -8,10 +8,10 @@
 ## Usage
 
 ```shell
-git clone https://github.com/kappa000/procman.git
-cd ./procman
+git clone https://github.com/kappa000/tama.git
+cd ./tama
 poetry install
 poetry shell
-python -m procman --debug
+python -m tama --debug
 ```
 後は放置しておけば、指定された間隔・時間でjobが実行される.

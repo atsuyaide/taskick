@@ -2,7 +2,7 @@ import argparse
 import logging
 import sys
 
-from procman import TaskRunner
+from tama import TaskRunner
 
 
 def main() -> None:
