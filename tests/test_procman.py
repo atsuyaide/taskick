@@ -1,7 +1,7 @@
 import pytest
 import schedule
 
-from procman import __version__, set_scheduled_job, simplify_crontab_format, update_scheduler
+from procman import __version__, get_execution_commands, set_scheduled_job, simplify_crontab_format, update_scheduler
 
 
 def test_version():
@@ -208,5 +208,17 @@ def test_update_scheduler(crontab_format, expected_job_list):
 #         scheduler = set_scheduled_job(scheduler, crontab_format, print)
 
 
-def test_get_obeserver():
+def test_update_observer():
     pass
+
+
+@pytest.mark.parametrize(
+    ("commands", "options", "expected_commands"),
+    [
+        (["a", "b"], {"c": "d"}, ["a", "b", "c", "d"]),
+    ],
+)
+def test_get_execution_commands(commands, options, expected_commands):
+    commands = get_execution_commands(commands, options)
+    for cmd, expected_cmd in zip(commands, expected_commands):
+        assert cmd == expected_cmd

@@ -1,15 +1,38 @@
-### $JOB_NAME:
+###
+### EXAMPLE_SCHEDULED_JOB:
 ###   status: 1  <- 0/1, If 1, this job is active.
 ###   commands:  <- PATH of the script you want to run.
 ###   execution:
-###     event_type: <- time/file.
 ###     immediate:  <- true/false. If True, it is executed immediately.
-###     when:       <- time: crontab format, file:
+###     event_type: time
+### .   detail:
+###       when:       <- time: crontab format,
+###   options: <- Optional options
+###     $OPTION: $VALUE
+###
+### EXAMPLE_WATCHDOG_JOB:
+###   # Run modified in ./ -> python ./example.py --message 'Procman! thi...'
+###   status: 1  <- 0/1, If 1, this job is active.
+###   commands:  <- PATH of the script you want to run.
+###   execution:
+###     immediate: false
+###     event_type: file
+###     detail:
+###       path:
+###       recursive: true/false
+###       handler:
+###         name: EventHandler name
+###       when:
+###         - "moved"
+###         - "deleted"
+###         - "created"
+###         - "modified"
+###         - "closed"
 ###   options:
 ###     $OPTION: $VALUE
 
 example_time_trigger_process_1:
-  # Run every minute. -> "python ./example.py --message 'procman! thi...'"
+  # Run every minute. -> "python ./example.py --message 'Procman! thi...'"
   status: 1
   commands:
     - python
@@ -23,7 +46,7 @@ example_time_trigger_process_1:
     --message: Procman! This process runs every minute.
 
 example_time_trigger_process_2:
-  # Run every 2 minutes. -> "python ./example.py --message 'procman! thi...'"
+  # Run every 2 minutes. -> "python ./example.py --message 'Procman! thi...'"
   status: 1
   commands:
     - python
@@ -61,10 +84,9 @@ example_time_trigger_process_4:
     event_type: time
     detail:
       when: "*/1 * * * *"
-  options:
 
 example_file_trigger_process_1:
-  # Run modified in ./ -> python ./example.py --message 'procman! thi...'
+  # Run modified in ./ -> python ./example.py --message 'Procman! thi...'
   status: 1
   commands:
     - python
@@ -84,14 +106,14 @@ example_file_trigger_process_1:
         - "modified"
         # - "closed"
   options:
-    --message: Procman! This process runs created or modified in observe dir.
+    --message: Procman! This process runs when file created in observing dir.
 
 example_file_trigger_process_2:
-  # Run modified in ./sandbox/*.(txt|csv) -> python ./example.py --message 'procman! thi...'
+  # Run modified in ./sandbox/*.(txt|csv) -> python ./example.py --message 'Procman! thi...'
   status: 1
   commands:
     - echo
-    - aaa
+    - detected file change in observing dir.
   execution:
     immediate: false
     event_type: file
@@ -110,4 +132,3 @@ example_file_trigger_process_2:
         - "created"
         - "modified"
         # - "closed"
-  options:
