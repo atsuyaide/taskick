@@ -196,16 +196,19 @@ def test_update_scheduler(crontab_format, expected_job_list):
         _check_job_properites(expected_job, job)
 
 
-# @pytest.mark.parametrize(
-#     ("crontab_format", "expected_exception"),
-#     [
-#         ("* * * * *", ValueError),
-#     ]
-# )
-# def test_set_scheduled_job_given_invalid_input(crontab_format, expected_exception):
-#     scheduler = schedule.Scheduler()
-#     with pytest.raises(expected_exception):
-#         scheduler = set_scheduled_job(scheduler, crontab_format, print)
+@pytest.mark.parametrize(
+    ("crontab_format", "expected_exception"),
+    [
+        ("*  * * * * *", ValueError),
+        ("a  * * * *", ValueError),
+        ("** * * * *", ValueError),
+        ("*a * * * *", ValueError),
+    ],
+)
+def test_set_scheduled_job_given_invalid_input(crontab_format, expected_exception):
+    scheduler = schedule.Scheduler()
+    with pytest.raises(expected_exception):
+        scheduler = set_scheduled_job(scheduler, crontab_format, print)
 
 
 def test_update_observer():
