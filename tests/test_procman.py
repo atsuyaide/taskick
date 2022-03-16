@@ -1,6 +1,5 @@
 import pytest
 import schedule
-from watchdog.observers.polling import PollingObserver as Observer
 
 from procman import __version__, get_execution_commands, set_scheduled_job, simplify_crontab_format, update_scheduler
 
@@ -213,7 +212,7 @@ def test_set_scheduled_job_given_invalid_input(crontab_format, expected_exceptio
 
 
 def test_update_observer():
-    observer = Observer()
+    pass
 
 
 @pytest.mark.parametrize(
