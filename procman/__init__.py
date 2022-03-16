@@ -58,6 +58,9 @@ def set_scheduled_job(scheduler: Scheduler, crontab_format: str, task: Callable,
     Returns:
         Scheduler: _description_
     """
+    if re.match("^( *(\\*|\\d+|(\\*|\\d+)/(\\*|\\d+))){5} *$", crontab_format) is None:
+        raise ValueError("Invalid foramt.")
+
     if re.match("^( *\\*){5} *$", crontab_format):
         crontab_format = "*/1 * * * *"
 
@@ -79,8 +82,6 @@ def set_scheduled_job(scheduler: Scheduler, crontab_format: str, task: Callable,
         hh, mm, ss = "00", time_values[1], time_values[2]
     elif len(time_values) == 4:
         hh, mm, ss = time_values[2], time_values[3], "00"
-    else:
-        raise ValueError("Invalid format.")
 
     every = 1
     every_method_is_called = False
@@ -147,8 +148,6 @@ def simplify_crontab_format(crontab_format: str) -> List[str]:
         List[str]: _description_
     """
     cron_values = crontab_format.split()
-    if len(cron_values) != 5:
-        raise ValueError("Must consist of five elements.")
 
     cron_values = [x.split(",") for x in cron_values]
 
