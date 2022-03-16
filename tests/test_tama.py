@@ -1,7 +1,7 @@
 import pytest
 import schedule
 
-from procman import __version__, get_execution_commands, set_scheduled_job, simplify_crontab_format, update_scheduler
+from tama import __version__, get_execution_commands, set_scheduled_job, simplify_crontab_format, update_scheduler
 
 
 def test_version():
