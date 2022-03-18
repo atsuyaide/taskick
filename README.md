@@ -1,4 +1,4 @@
-# Tama(仮)
+# Taskick(仮)
 
 イベント駆動のスクリプト自動実行ライブラリ.
 
@@ -8,10 +8,10 @@
 ## Usage
 
 ```shell
-git clone https://github.com/kappa000/tama.git
-cd ./tama
+git clone https://github.com/kappa000/taskick.git
+cd ./taskick
 poetry install
 poetry shell
-python -m tama --debug
+python -m taskick --debug
 ```
 後は放置しておけば、指定された間隔・時間でjobが実行される.
