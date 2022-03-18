@@ -12,9 +12,9 @@ install_requires = \
 
 setup_kwargs = {
     'name': 'taskick',
-    'version': '0.1.0',
+    'version': '0.1.1',
     'description': '',
-    'long_description': '# Taskick(仮)\n\nイベント駆動のスクリプト自動実行ライブラリ.\n\n- 設定ファイル(```jobcong.yaml```)をライブラリが読み込み, タスクの実行スケジュール自動管理する.\n- 実行スケージュールは[Crontab](https://www.tutorialspoint.com/unix_commands/crontab.htm)のフォーマットで読み込み可能にする.\n- 今後[Watchdog](https://github.com/gorakhargosh/watchdog)を利用し, ディレクトリ操作とスクリプト実行を連携させる予定.\n## Usage\n\n```shell\ngit clone https://github.com/kappa000/taskick.git\ncd ./taskick\npoetry install\npoetry shell\npython -m taskick --debug\n```\n後は放置しておけば、指定された間隔・時間でjobが実行される.\n',
+    'long_description': '# Taskick\n',
     'author': 'Atsuya Ide',
     'author_email': 'atsuya.ide528@gmail.com',
     'maintainer': None,
