@@ -2,7 +2,7 @@ import argparse
 import logging
 import sys
 
-from tama import TaskRunner
+from taskick import TaskRunner
 
 
 def main() -> None:

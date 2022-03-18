@@ -13,7 +13,7 @@ import yaml
 from schedule import Scheduler
 from watchdog.observers.polling import PollingObserver as Observer
 
-logger = logging.getLogger("tama")
+logger = logging.getLogger("taskick")
 
 
 WEEKS = [

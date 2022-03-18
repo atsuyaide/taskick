@@ -24,7 +24,7 @@ jobs:
           isort . --diff --check
       - name: flake8
         run: |
-          flake8 --ignore E501 .
+          flake8 --ignore E501
       - name: black
         run: |
           black . --diff
