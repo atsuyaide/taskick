@@ -315,7 +315,9 @@ def load_config(config: dict) -> Tuple[Scheduler, Observer, List[CommandExecuter
 
         CE = CommandExecuter(commands)
 
-        if execution_detail["event_type"] == "time":
+        if execution_detail["event_type"] is None:
+            execution_detail["immediate"] = True
+        elif execution_detail["event_type"] == "time":
             schedule_detail = execution_detail["detail"]
             scheduler = update_scheduler(scheduler, schedule_detail["when"], CE.execute_by_scheduler)
         elif execution_detail["event_type"] == "file":
@@ -336,25 +338,21 @@ def load_config(config: dict) -> Tuple[Scheduler, Observer, List[CommandExecuter
 class TaskRunner:
     """_summary_"""
 
-    def __init__(self, job_config: str) -> None:
+    def __init__(self, job_config: dict) -> None:
         """_summary_
 
         Args:
-            job_config (str): _description_
+            job_config (dict): _description_
 
         Raises:
             ValueError: _description_
         """
-        with open(job_config, "r", encoding="utf-8") as f:
-            config = yaml.safe_load(f)
-
-        self.scheduler, self.observer, immediate_execution_CE = load_config(config)
-
-        for CE in immediate_execution_CE:
-            CE.execute()
+        self.scheduler, self.observer, self.immediate_execution_CE = load_config(job_config)
 
     def run(self) -> None:
         """_summary_"""
+        for CE in self.immediate_execution_CE:
+            CE.execute()
 
         self.observer.start()
 

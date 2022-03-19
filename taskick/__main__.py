@@ -2,24 +2,34 @@ import argparse
 import logging
 import sys
 
-from taskick import TaskRunner
+import yaml
+
+from taskick import TaskRunner, __version__
 
 
 def main() -> None:
     """_summary_"""
+
     parser = argparse.ArgumentParser()
-    parser.add_argument("--debug", action="store_true")
-    parser.add_argument("--info", action="store_true")
-    parser.add_argument("--file", "-f", type=str, default="./jobconf.yaml")
+    parser.add_argument("--verbose", "-v", type=str, default="warning", help="")
+    parser.add_argument("--version", "-V", action="store_true", help="")
+    parser.add_argument("--file", "-f", type=str, default=None, help="")
     args = parser.parse_args()
 
-    if args.debug:
-        logging.basicConfig(level=logging.DEBUG)
+    logging.basicConfig(level=getattr(logging, args.verbose.upper()))
 
-    if args.info:
-        logging.basicConfig(level=logging.INFO)
+    if args.version:
+        print(f"Taskick {__version__}")
+        sys.exit(0)
 
-    TR = TaskRunner(args.file)
+    if args.file is None:
+        parser.print_help()
+        sys.exit(0)
+
+    with open(args.file, "r", encoding="utf-8") as f:
+        job_config = yaml.safe_load(f)
+
+    TR = TaskRunner(job_config)
     TR.run()
 
 
