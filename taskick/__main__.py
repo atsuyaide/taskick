@@ -13,7 +13,7 @@ def main() -> None:
     """_summary_"""
 
     parser = argparse.ArgumentParser()
-    parser.add_argument("--verbose", "-v", type=str, default="info", help="")
+    parser.add_argument("--verbose", "-v", type=str, default="warning", help="")
     parser.add_argument("--version", "-V", action="store_true", help="")
     parser.add_argument("--file", "-f", type=str, default=None, help="")
     args = parser.parse_args()

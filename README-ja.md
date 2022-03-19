@@ -1,7 +1,9 @@
-# Taskick(仮)
+# Taskick
 
 taskickはPythonで実装されたイベント駆動のスクリプト自動実行ライブラリです.
 利用者は実行するスクリプトの開発に集中し, 設定ファイル(YAML)を作成するだけで任意のタイミングでスクリプトを自動実行できます.
+
+[English version README](./README.md)
 
 Taskickの主な機能は以下です.
 
@@ -15,60 +17,41 @@ Taskickの主な機能は以下です.
 ```shell
 $ pip install taskick
 $ python -m taskick --version
-Taskick 0.1.0
+Taskick 0.1.1
 ```
 
-## Toy Examples
+## Toy Example
 
-まず, 空の設定ファイル(YAML)を用意します.
+PNG画像をPDFに変換するアプリケーションのtoy exampleを提示します.
+
+まずexampleリポジトリをcloneしてください.
 
 ```shell
-$ touch jobconf.yaml
+git clone https://github.com/kappa000/taskick-example.git
 ```
 
-### Taskick起動時にTaskを起動する
-
-ファイルに下記を記載します.
-
-```yaml
-example_task:
-  status: 1 # 0 -> This task is inactive. 1 -> This task is active.
-  commands:
-    - echo
-    - Hello Taskick!
-  execution:
-    event_type: null
-```
-
-TaskickはStatusがActiveなtaskのみ読み込みます.
-
-Taskickを起動すると以下の出力が得られます.
+cloneしたディレクトリに移動し, 以下のTaskickを起動します.
 
 ```shell
-$ python -m taskick -f ./jobconf.yaml
-Hello Taskick!
+$ cd taskick-example
+$ python -m taskick -f jobconf.yaml -v info
+INFO:taskick:Loading tasks...
+INFO:taskick:Processing: example_task_1
+INFO:taskick:Immediate execution option is selected.
+INFO:taskick:Processing: example_time_trigger_task_1
+INFO:taskick:Immediate execution option is selected.
+INFO:taskick:Processing: example_file_trigger_task_1
+INFO:taskick:Processing: example_file_trigger_task_2
+INFO:taskick:Done.
+INFO:taskick:Executing: example_task_1
+INFO:taskick:Executing: example_time_trigger_task_1
+Sat Mar 19 21:15:09 JST 2022 Hello Taskick! My HOME directory is /Users/kappa
+2022-03-19 21:15:09.422750: hello Taskick! This task runs every 2 minutes.
 ```
 
-### Taskをスケジュール実効する
+inputフォルダに適当なPNG画像を保存すると, outputに変換されたPDFファイルが出力されます.
+またinputフォルダにあるファイルは起動時, 毎分自動的に削除されます.
 
-ファイルに下記を記載します.
+![convert png to pdf](./convert_png2pdf.gif)
 
-```yaml
-example_time_trigger_task:
-  status: 1
-  commands:
-    - echo
-    - Hello Taskick! This task runs every one minute.
-  execution:
-    immediate: false
-    event_type: time
-    detail:
-      when: "*/1 * * * *"
-```
-
-Taskickを起動すると以下の出力が得られます.
-
-```shell
-$ python -m taskick -f ./jobconf.yaml
-Hello Taskick!
-```
+これらのタスクは`jobconf.yaml`で制御され, Taskickが管理しています.
