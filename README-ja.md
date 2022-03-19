@@ -39,15 +39,13 @@ $ python -m taskick -f jobconf.yaml -v info
 INFO:taskick:Loading tasks...
 INFO:taskick:Processing: example_task_1
 INFO:taskick:Immediate execution option is selected.
-INFO:taskick:Processing: example_time_trigger_task_1
+INFO:taskick:Processing: auto_remove_input_folder
 INFO:taskick:Immediate execution option is selected.
-INFO:taskick:Processing: example_file_trigger_task_1
-INFO:taskick:Processing: example_file_trigger_task_2
+INFO:taskick:Processing: png2pdf
 INFO:taskick:Done.
 INFO:taskick:Executing: example_task_1
-INFO:taskick:Executing: example_time_trigger_task_1
-Sat Mar 19 21:15:09 JST 2022 Hello Taskick! My HOME directory is /Users/kappa
-2022-03-19 21:15:09.422750: hello Taskick! This task runs every 2 minutes.
+INFO:taskick:Executing: auto_remove_input_folder
+Sat Mar 19 23:51:47 JST 2022 Welcome to Taskick!
 ```
 
 inputフォルダに適当なPNG画像を保存すると, outputに変換されたPDFファイルが出力されます.
