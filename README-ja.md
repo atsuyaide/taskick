@@ -27,13 +27,14 @@ PNG画像をPDFに変換するアプリケーションのtoy exampleを提示し
 まず[taskick-example](https://github.com/kappa000/taskick-example)をcloneしてください.
 
 ```shell
-git clone https://github.com/kappa000/taskick-example.git
+$ git clone https://github.com/kappa000/taskick-example.git
 ```
 
 cloneしたディレクトリに移動し, Taskickを起動します.
 
 ```shell
 $ cd taskick-example
+$ pip install -r requirements.txt
 $ python -m taskick -f jobconf.yaml -v info
 INFO:taskick:Loading tasks...
 INFO:taskick:Processing: example_task_1

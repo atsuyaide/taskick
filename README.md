@@ -5,7 +5,7 @@ Taskickを利用することで日々の退屈なルーティーン業務や作�
 
 利用者は実行するスクリプトの開発に集中し, 設定ファイル(YAML)を作成するだけで任意の日時やトリガー発火時にスクリプトを自動実行できます.
 
-[日本語版README](./README-ja.md)
+[English version README](./README.md)
 
 Taskickの主な機能は以下です.
 
@@ -27,13 +27,14 @@ PNG画像をPDFに変換するアプリケーションのtoy exampleを提示し
 まず[taskick-example](https://github.com/kappa000/taskick-example)をcloneしてください.
 
 ```shell
-git clone https://github.com/kappa000/taskick-example.git
+$ git clone https://github.com/kappa000/taskick-example.git
 ```
 
 cloneしたディレクトリに移動し, Taskickを起動します.
 
 ```shell
 $ cd taskick-example
+$ pip install -r requirements.txt
 $ python -m taskick -f jobconf.yaml -v info
 INFO:taskick:Loading tasks...
 INFO:taskick:Processing: example_task_1
