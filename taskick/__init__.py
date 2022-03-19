@@ -9,7 +9,6 @@ import subprocess
 import time
 from typing import Callable, List, Tuple
 
-import yaml
 from schedule import Scheduler
 from watchdog.observers.polling import PollingObserver as Observer
 
@@ -235,7 +234,7 @@ def update_observer(observer: Observer, observe_detail: dict, task: Callable) ->
     return observer
 
 
-def get_execution_commands(commands: list, options: dict) -> List[str]:
+def get_execution_commands(commands: list, options: dict) -> str:
     """_summary_
 
     Args:
@@ -243,29 +242,29 @@ def get_execution_commands(commands: list, options: dict) -> List[str]:
         options (dict): _description_
 
     Returns:
-        List[str]: _description_
+        str: _description_
     """
     if options is None:
-        return commands
+        return " ".join(commands)
 
     for key, value in options.items():
         commands.append(key)
         if value is not None:
-            commands.append(value)
+            commands.append(f'"{value}"')
 
-    return commands
+    return " ".join(commands)
 
 
 class CommandExecuter:
     """_summary_"""
 
-    def __init__(self, commands: List[str]) -> None:
+    def __init__(self, command: str) -> None:
         """_summary_
 
         Args:
             commands (List[str]): _description_
         """
-        self.commands_str = " ".join(commands)
+        self.command = command
 
     def execute_by_observer(self, event) -> None:
         """_summary_
@@ -282,7 +281,8 @@ class CommandExecuter:
 
     def execute(self) -> None:
         """_summary_"""
-        subprocess.Popen(self.commands_str, shell=True)
+        logger.debug(f"Executing: {self.command}")
+        subprocess.Popen(self.command, shell=True)
 
 
 def load_config(config: dict) -> Tuple[Scheduler, Observer, List[CommandExecuter]]:
@@ -301,17 +301,22 @@ def load_config(config: dict) -> Tuple[Scheduler, Observer, List[CommandExecuter
     observer = Observer()
     immediate_execution_CE: List[CommandExecuter] = []
     for task_name, task_detail in config.items():
-        logger.debug(f"Processing: {task_name}: {task_detail}")
+        logger.debug(task_detail)
         if task_detail["status"] != 1:
-            logger.debug(f"Skipped: {task_name}")
+            logger.info(f"Skipped: {task_name}")
             continue
+        else:
+            logger.info(f"Processing: {task_name}")
 
         commands = task_detail["commands"]
         execution_detail = task_detail["execution"]
 
         if "options" in task_detail.keys():
             options = task_detail["options"]
-            commands = get_execution_commands(commands, options)
+        else:
+            options = None
+
+        commands = get_execution_commands(commands, options)
 
         CE = CommandExecuter(commands)
 
@@ -325,8 +330,6 @@ def load_config(config: dict) -> Tuple[Scheduler, Observer, List[CommandExecuter
             observer = update_observer(observer, observe_detail, CE.execute_by_observer)
         else:
             raise ValueError("'{:}' is not defined.".format(execution_detail["event_type"]))
-
-        logger.info(f"Registered: '{task_name}'")
 
         if execution_detail["immediate"]:
             logger.info("Immediate execution option is selected.")
@@ -362,11 +365,11 @@ class TaskRunner:
                 time.sleep(1)
         except KeyboardInterrupt:
             logger.debug("Ctrl-C detected.")
-            self.observer.stop()
         except Exception as e:
             import traceback
 
             logger.error(e)
             traceback.print_exc()
         finally:
+            self.observer.stop()
             self.observer.join()
