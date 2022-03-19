@@ -1,6 +1,6 @@
 [tool.poetry]
 name = "taskick"
-version = "0.1.1"
+version = "0.1.2"
 description = ""
 authors = ["Atsuya Ide <atsuya.ide528@gmail.com>"]
 repository = "https://github.com/kappa000/taskick"

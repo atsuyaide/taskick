@@ -19,7 +19,7 @@ Taskickの主な機能は以下です.
 ```shell
 $ pip install taskick
 $ python -m taskick --version
-Taskick 0.1.1
+Taskick 0.1.2
 ```
 
 ## Toy Example
