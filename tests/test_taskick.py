@@ -10,7 +10,7 @@ from taskick import (
     CommandExecuter,
     __version__,
     get_execution_commands,
-    load_config,
+    load_and_setup,
     set_scheduled_job,
     simplify_crontab_format,
     update_scheduler,
@@ -230,11 +230,11 @@ def test_update_observer():
     pass
 
 
-def test_load_config():
+def test_load_and_setup():
     with open(os.path.join(DIR_NAME, f"jobconf_{os.name}.yaml"), "r", encoding="utf-8") as f:
         job_config = yaml.safe_load(f)
 
-    scheduler, observer, CE_list = load_config(job_config)
+    scheduler, observer, CE_list = load_and_setup(job_config)
 
     assert isinstance(scheduler, Scheduler)
     assert isinstance(observer, PollingObserver)

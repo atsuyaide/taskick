@@ -7,7 +7,6 @@ import logging
 import re
 import subprocess
 import time
-from asyncio import events
 from typing import Callable, List, Tuple
 
 from schedule import Scheduler
@@ -312,11 +311,11 @@ class CommandExecuter:
             command = " ".join(self.command)
 
         logger.info(f"Executing: {self.task_name}")
-        logger.debug(f"Executing command: {command}")
+        logger.debug(f"Detail: {command}")
         subprocess.Popen(command, shell=True)
 
 
-def load_config(config: dict) -> Tuple[Scheduler, Observer, List[CommandExecuter]]:
+def load_and_setup(config: dict) -> Tuple[Scheduler, Observer, List[CommandExecuter]]:
     """_summary_
 
     Args:
@@ -385,7 +384,7 @@ class TaskRunner:
         Raises:
             ValueError: _description_
         """
-        self.scheduler, self.observer, self.immediate_execution_CE = load_config(job_config)
+        self.scheduler, self.observer, self.immediate_execution_CE = load_and_setup(job_config)
 
     def run(self) -> None:
         """_summary_"""

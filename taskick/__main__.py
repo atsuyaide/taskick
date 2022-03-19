@@ -6,12 +6,14 @@ import yaml
 
 from taskick import TaskRunner, __version__
 
+logger = logging.getLogger("taskick")
+
 
 def main() -> None:
     """_summary_"""
 
     parser = argparse.ArgumentParser()
-    parser.add_argument("--verbose", "-v", type=str, default="warning", help="")
+    parser.add_argument("--verbose", "-v", type=str, default="info", help="")
     parser.add_argument("--version", "-V", action="store_true", help="")
     parser.add_argument("--file", "-f", type=str, default=None, help="")
     args = parser.parse_args()
@@ -29,7 +31,9 @@ def main() -> None:
     with open(args.file, "r", encoding="utf-8") as f:
         job_config = yaml.safe_load(f)
 
+    logger.info("Loading tasks...")
     TR = TaskRunner(job_config)
+    logger.info("Done.")
     TR.run()
 
 
