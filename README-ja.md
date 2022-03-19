@@ -1,7 +1,9 @@
 # Taskick
 
 taskickはPythonで実装されたイベント駆動のスクリプト自動実行ライブラリです.
-利用者は実行するスクリプトの開発に集中し, 設定ファイル(YAML)を作成するだけで任意のタイミングでスクリプトを自動実行できます.
+Taskickを利用することで日々の退屈なルーティーン業務や作業を自動化できます.
+
+利用者は実行するスクリプトの開発に集中し, 設定ファイル(YAML)を作成するだけで任意の日時やトリガー発火時にスクリプトを自動実行できます.
 
 [English version README](./README.md)
 
@@ -24,13 +26,13 @@ Taskick 0.1.1
 
 PNG画像をPDFに変換するアプリケーションのtoy exampleを提示します.
 
-まずexampleリポジトリをcloneしてください.
+まず[taskick-example](https://github.com/kappa000/taskick-example)をcloneしてください.
 
 ```shell
 git clone https://github.com/kappa000/taskick-example.git
 ```
 
-cloneしたディレクトリに移動し, 以下のTaskickを起動します.
+cloneしたディレクトリに移動し, Taskickを起動します.
 
 ```shell
 $ cd taskick-example
