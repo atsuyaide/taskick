@@ -1,4 +1,4 @@
-__version__ = "0.1.0"
+__version__ = "0.1.3"
 
 
 import importlib
@@ -9,8 +9,8 @@ import subprocess
 import time
 from typing import Callable, List, Tuple
 
-import yaml
 from schedule import Scheduler
+from watchdog.events import FileMovedEvent
 from watchdog.observers.polling import PollingObserver as Observer
 
 logger = logging.getLogger("taskick")
@@ -251,7 +251,7 @@ def get_execution_commands(commands: list, options: dict) -> List[str]:
     for key, value in options.items():
         commands.append(key)
         if value is not None:
-            commands.append(value)
+            commands.append(f'"{value}"')
 
     return commands
 
@@ -259,13 +259,32 @@ def get_execution_commands(commands: list, options: dict) -> List[str]:
 class CommandExecuter:
     """_summary_"""
 
-    def __init__(self, commands: List[str]) -> None:
+    def __init__(self, task_name: str, command: str, propagate: bool = False) -> None:
         """_summary_
 
         Args:
             commands (List[str]): _description_
         """
-        self.commands = commands
+        self.task_name = task_name
+        self.command = command
+        self.propagate = propagate
+
+    def _get_event_options(self, event) -> dict:
+        if isinstance(event, FileMovedEvent):
+            event_keys = ["--event_type", "--src_path", "--dest_path", "--is_directory"]
+            event_values = event.key
+        else:
+            event_keys = ["--event_type", "--src_path", "--is_directory"]
+            event_values = event.key
+
+        event_options = dict(zip(event_keys, event_values))
+
+        if event_options["--is_directory"]:
+            event_options["--is_directory"] = None
+        else:
+            del event_options["--is_directory"]
+
+        return event_options
 
     def execute_by_observer(self, event) -> None:
         """_summary_
@@ -273,19 +292,30 @@ class CommandExecuter:
         Args:
             event (_type_): _description_
         """
-        logger.info(event)
-        self.execute()
+        logger.debug(event)
+        command = self.command
+        if self.propagate:
+            event_options = self._get_event_options(event)
+            command = get_execution_commands(command, event_options)
+
+        command = " ".join(command)
+        logger.debug(command)
+        self.execute(command)
 
     def execute_by_scheduler(self) -> None:
         """_summary_"""
         self.execute()
 
-    def execute(self) -> None:
-        """_summary_"""
-        subprocess.Popen(self.commands)
+    def execute(self, command: str = None) -> None:
+        if command is None:
+            command = " ".join(self.command)
+
+        logger.info(f"Executing: {self.task_name}")
+        logger.debug(f"Detail: {command}")
+        subprocess.Popen(command, shell=True)
 
 
-def load_config(config: dict) -> Tuple[Scheduler, Observer, List[CommandExecuter]]:
+def load_and_setup(config: dict) -> Tuple[Scheduler, Observer, List[CommandExecuter]]:
     """_summary_
 
     Args:
@@ -301,30 +331,39 @@ def load_config(config: dict) -> Tuple[Scheduler, Observer, List[CommandExecuter
     observer = Observer()
     immediate_execution_CE: List[CommandExecuter] = []
     for task_name, task_detail in config.items():
-        logger.debug(f"Processing: {task_name}: {task_detail}")
+        logger.debug(task_detail)
         if task_detail["status"] != 1:
-            logger.debug(f"Skipped: {task_name}")
+            logger.info(f"Skipped: {task_name}")
             continue
+        else:
+            logger.info(f"Processing: {task_name}")
 
         commands = task_detail["commands"]
         execution_detail = task_detail["execution"]
 
         if "options" in task_detail.keys():
             options = task_detail["options"]
-            commands = get_execution_commands(commands, options)
+        else:
+            options = None
 
-        CE = CommandExecuter(commands)
+        commands = get_execution_commands(commands, options)
 
-        if execution_detail["event_type"] == "time":
+        if execution_detail["event_type"] is None:
+            CE = CommandExecuter(task_name, commands)
+            execution_detail["immediate"] = True
+        elif execution_detail["event_type"] == "time":
+            CE = CommandExecuter(task_name, commands)
             schedule_detail = execution_detail["detail"]
             scheduler = update_scheduler(scheduler, schedule_detail["when"], CE.execute_by_scheduler)
         elif execution_detail["event_type"] == "file":
+            if "propagate" not in execution_detail.keys():
+                execution_detail["propagate"] = False
+
+            CE = CommandExecuter(task_name, commands, execution_detail["propagate"])
             observe_detail = execution_detail["detail"]
             observer = update_observer(observer, observe_detail, CE.execute_by_observer)
         else:
             raise ValueError("'{:}' is not defined.".format(execution_detail["event_type"]))
-
-        logger.info(f"Registered: '{task_name}'")
 
         if execution_detail["immediate"]:
             logger.info("Immediate execution option is selected.")
@@ -336,25 +375,21 @@ def load_config(config: dict) -> Tuple[Scheduler, Observer, List[CommandExecuter
 class TaskRunner:
     """_summary_"""
 
-    def __init__(self, job_config: str) -> None:
+    def __init__(self, job_config: dict) -> None:
         """_summary_
 
         Args:
-            job_config (str): _description_
+            job_config (dict): _description_
 
         Raises:
             ValueError: _description_
         """
-        with open(job_config, "r", encoding="utf-8") as f:
-            config = yaml.safe_load(f)
-
-        self.scheduler, self.observer, immediate_execution_CE = load_config(config)
-
-        for CE in immediate_execution_CE:
-            CE.execute()
+        self.scheduler, self.observer, self.immediate_execution_CE = load_and_setup(job_config)
 
     def run(self) -> None:
         """_summary_"""
+        for CE in self.immediate_execution_CE:
+            CE.execute()
 
         self.observer.start()
 
@@ -364,11 +399,11 @@ class TaskRunner:
                 time.sleep(1)
         except KeyboardInterrupt:
             logger.debug("Ctrl-C detected.")
-            self.observer.stop()
         except Exception as e:
             import traceback
 
             logger.error(e)
             traceback.print_exc()
         finally:
+            self.observer.stop()
             self.observer.join()

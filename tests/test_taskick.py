@@ -1,11 +1,26 @@
+import os
+
 import pytest
 import schedule
+import yaml
+from schedule import Scheduler
+from watchdog.observers.polling import PollingObserver
 
-from taskick import __version__, get_execution_commands, set_scheduled_job, simplify_crontab_format, update_scheduler
+from taskick import (
+    CommandExecuter,
+    __version__,
+    get_execution_commands,
+    load_and_setup,
+    set_scheduled_job,
+    simplify_crontab_format,
+    update_scheduler,
+)
+
+DIR_NAME = os.path.dirname(__file__)
 
 
 def test_version():
-    assert __version__ == "0.1.0"
+    assert __version__ == "0.1.3"
 
 
 def _check_job_properites(expected_job, job):
@@ -215,13 +230,24 @@ def test_update_observer():
     pass
 
 
+def test_load_and_setup():
+    with open(os.path.join(DIR_NAME, f"jobconf_{os.name}.yaml"), "r", encoding="utf-8") as f:
+        job_config = yaml.safe_load(f)
+
+    scheduler, observer, CE_list = load_and_setup(job_config)
+
+    assert isinstance(scheduler, Scheduler)
+    assert isinstance(observer, PollingObserver)
+    for CE in CE_list:
+        assert isinstance(CE, CommandExecuter)
+
+
 @pytest.mark.parametrize(
     ("commands", "options", "expected_commands"),
     [
-        (["a", "b"], {"c": "d"}, ["a", "b", "c", "d"]),
+        (["a", "b"], {"-c": "d"}, ["a", "b", "-c", '"d"']),
     ],
 )
 def test_get_execution_commands(commands, options, expected_commands):
     commands = get_execution_commands(commands, options)
-    for cmd, expected_cmd in zip(commands, expected_commands):
-        assert cmd == expected_cmd
+    assert commands == expected_commands

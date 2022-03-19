@@ -9,14 +9,14 @@ install_requires = ["PyYAML>=6.0,<7.0", "schedule>=1.1.0,<2.0.0", "watchdog>=2.1
 
 setup_kwargs = {
     "name": "taskick",
-    "version": "0.1.1",
+    "version": "0.1.3",
     "description": "",
-    "long_description": "# Taskick\n",
+    "long_description": None,
     "author": "Atsuya Ide",
     "author_email": "atsuya.ide528@gmail.com",
     "maintainer": None,
     "maintainer_email": None,
-    "url": "https://github.com/kappa000/taskick",
+    "url": None,
     "packages": packages,
     "package_data": package_data,
     "install_requires": install_requires,
