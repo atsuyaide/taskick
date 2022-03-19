@@ -86,31 +86,28 @@ example_time_trigger_task_2:
     --message: Taskick! This task runs every 2 minutes.
 
 example_file_trigger_task_1:
-  # Run modified in ./ using LoggingEventHandler -> python ./example.py --message "Taskick! thi..."
-  status: 1
-  commands:
-    - python
-    - ./example.py
-  execution:
-    immediate: false
-    event_type: file
-    detail:
-      path: ./
-      recursive: false
-      handler:
-        name: LoggingEventHandler
-      when:
-        - created
-        - modified
-  options:
-    --message: Taskick! This task runs when file created in observing dir.
-
-example_file_trigger_task_2:
   # Run modified in ./*.(txt|csv) using PatternMatchingEventHandler -> echo "detected ..."
   status: 1
   commands:
     - echo
     - detected file change in observing dir.
+  execution:
+    immediate: false
+    event_type: file
+    detail:
+      path: ./
+      handler:
+        name: LoggingEventHandler
+      recursive: false
+      when:
+        - modified
+
+example_file_trigger_task_2:
+  # Run modified in ./ using LoggingEventHandler -> python ./example.py --message "Taskick! thi..."
+  status: 1
+  commands:
+    - python
+    - ./example.py
   execution:
     immediate: false
     event_type: file
@@ -121,11 +118,31 @@ example_file_trigger_task_2:
         name: PatternMatchingEventHandler
         args:
           patterns:
-            - \*.py
-            - \*.csv
+            - "*.csv"
       when:
-        - moved
-        - deleted
         - created
         - modified
-        - closed
+  options:
+    --message: Taskick! This task runs when file created in observing dir.
+
+example_file_trigger_task_3:
+  # Run modified in ./sandbox/*.(txt|csv) -> echo "detected ..."
+  status: 1
+  commands:
+    - python
+    - ./example.py
+  execution:
+    immediate: false
+    event_type: file
+    propagate: true
+    detail:
+      path: ./sandbox
+      recursive: false
+      handler:
+        name: PatternMatchingEventHandler
+        args:
+          patterns:
+            - "*.py"
+      when:
+        - moved
+        - modified

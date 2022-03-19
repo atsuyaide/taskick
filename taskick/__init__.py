@@ -7,9 +7,11 @@ import logging
 import re
 import subprocess
 import time
+from asyncio import events
 from typing import Callable, List, Tuple
 
 from schedule import Scheduler
+from watchdog.events import FileMovedEvent
 from watchdog.observers.polling import PollingObserver as Observer
 
 logger = logging.getLogger("taskick")
@@ -234,7 +236,7 @@ def update_observer(observer: Observer, observe_detail: dict, task: Callable) ->
     return observer
 
 
-def get_execution_commands(commands: list, options: dict) -> str:
+def get_execution_commands(commands: list, options: dict) -> List[str]:
     """_summary_
 
     Args:
@@ -242,29 +244,48 @@ def get_execution_commands(commands: list, options: dict) -> str:
         options (dict): _description_
 
     Returns:
-        str: _description_
+        List[str]: _description_
     """
     if options is None:
-        return " ".join(commands)
+        return commands
 
     for key, value in options.items():
         commands.append(key)
         if value is not None:
             commands.append(f'"{value}"')
 
-    return " ".join(commands)
+    return commands
 
 
 class CommandExecuter:
     """_summary_"""
 
-    def __init__(self, command: str) -> None:
+    def __init__(self, task_name: str, command: str, propagate: bool = False) -> None:
         """_summary_
 
         Args:
             commands (List[str]): _description_
         """
+        self.task_name = task_name
         self.command = command
+        self.propagate = propagate
+
+    def _get_event_options(self, event) -> dict:
+        if isinstance(event, FileMovedEvent):
+            event_keys = ["--event_type", "--src_path", "--dest_path", "--is_directory"]
+            event_values = event.key
+        else:
+            event_keys = ["--event_type", "--src_path", "--is_directory"]
+            event_values = event.key
+
+        event_options = dict(zip(event_keys, event_values))
+
+        if event_options["--is_directory"]:
+            event_options["--is_directory"] = None
+        else:
+            del event_options["--is_directory"]
+
+        return event_options
 
     def execute_by_observer(self, event) -> None:
         """_summary_
@@ -272,17 +293,27 @@ class CommandExecuter:
         Args:
             event (_type_): _description_
         """
-        logger.info(event)
-        self.execute()
+        logger.debug(event)
+        command = self.command
+        if self.propagate:
+            event_options = self._get_event_options(event)
+            command = get_execution_commands(command, event_options)
+
+        command = " ".join(command)
+        logger.debug(command)
+        self.execute(command)
 
     def execute_by_scheduler(self) -> None:
         """_summary_"""
         self.execute()
 
-    def execute(self) -> None:
-        """_summary_"""
-        logger.debug(f"Executing: {self.command}")
-        subprocess.Popen(self.command, shell=True)
+    def execute(self, command: str = None) -> None:
+        if command is None:
+            command = " ".join(self.command)
+
+        logger.info(f"Executing: {self.task_name}")
+        logger.debug(f"Executing command: {command}")
+        subprocess.Popen(command, shell=True)
 
 
 def load_config(config: dict) -> Tuple[Scheduler, Observer, List[CommandExecuter]]:
@@ -318,14 +349,18 @@ def load_config(config: dict) -> Tuple[Scheduler, Observer, List[CommandExecuter
 
         commands = get_execution_commands(commands, options)
 
-        CE = CommandExecuter(commands)
-
         if execution_detail["event_type"] is None:
+            CE = CommandExecuter(task_name, commands)
             execution_detail["immediate"] = True
         elif execution_detail["event_type"] == "time":
+            CE = CommandExecuter(task_name, commands)
             schedule_detail = execution_detail["detail"]
             scheduler = update_scheduler(scheduler, schedule_detail["when"], CE.execute_by_scheduler)
         elif execution_detail["event_type"] == "file":
+            if "propagate" not in execution_detail.keys():
+                execution_detail["propagate"] = False
+
+            CE = CommandExecuter(task_name, commands, execution_detail["propagate"])
             observe_detail = execution_detail["detail"]
             observer = update_observer(observer, observe_detail, CE.execute_by_observer)
         else:

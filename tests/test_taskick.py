@@ -243,11 +243,11 @@ def test_load_config():
 
 
 @pytest.mark.parametrize(
-    ("commands", "options", "expected_command"),
+    ("commands", "options", "expected_commands"),
     [
-        (["a", "b"], {"-c": "d"}, 'a b -c "d"'),
+        (["a", "b"], {"-c": "d"}, ["a", "b", "-c", '"d"']),
     ],
 )
-def test_get_execution_commands(commands, options, expected_command):
-    command = get_execution_commands(commands, options)
-    assert command == expected_command
+def test_get_execution_commands(commands, options, expected_commands):
+    commands = get_execution_commands(commands, options)
+    assert commands == expected_commands
