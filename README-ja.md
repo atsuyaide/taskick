@@ -22,7 +22,8 @@ $ pip install taskick
 
 ## Toy Example
 
-PNG画像をPDFに変換するアプリケーションのtoy exampleを提示します.
+PNG画像をPDFに変換するtoy exampleを提示します.
+ここでは動作概要のみ説明するので, 詳細は[プロジェクトページ](https://github.com/kappa000/taskick-example)を参照してください.
 
 まず[taskick-example](https://github.com/kappa000/taskick-example)をcloneしてください.
 
