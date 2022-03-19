@@ -215,6 +215,10 @@ def test_update_observer():
     pass
 
 
+def test_load_config():
+    pass
+
+
 @pytest.mark.parametrize(
     ("commands", "options", "expected_commands"),
     [

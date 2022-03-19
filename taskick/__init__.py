@@ -265,7 +265,7 @@ class CommandExecuter:
         Args:
             commands (List[str]): _description_
         """
-        self.commands = commands
+        self.commands_str = " ".join(commands)
 
     def execute_by_observer(self, event) -> None:
         """_summary_
@@ -282,7 +282,7 @@ class CommandExecuter:
 
     def execute(self) -> None:
         """_summary_"""
-        subprocess.Popen(self.commands)
+        subprocess.Popen(self.commands_str, shell=True)
 
 
 def load_config(config: dict) -> Tuple[Scheduler, Observer, List[CommandExecuter]]:

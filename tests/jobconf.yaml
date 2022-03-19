@@ -96,7 +96,6 @@ example_time_trigger_task_4:
   # Run every 1 minutes. -> "echo 'Hello Taskick! This...'"
   status: 1
   commands:
-    - date
     - echo $(date) Hello Taskick! このプロセスは毎分ターミナル上で実行されます.
   execution:
     immediate: true
