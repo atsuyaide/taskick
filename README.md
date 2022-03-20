@@ -12,7 +12,7 @@ Taskickの主な機能は以下です.
 - 実行したいスクリプトの起動タイミングは設定ファイル(YAML)で管理できます.
 - タスクの起動タイミングとして日時, またはディレクトリ・ファイル操作を発火条件とすることが可能です.
 - スケージュール実行の指定には[Crontab](https://www.tutorialspoint.com/unix_commands/crontab.htm)のフォーマットで利用できます.
-- ディレクトリ・ファイル操作の検知には[Watchdog](https://github.com/gorakhargosh/watchdog)を利用しており, 任意の[event API](https://python-watchdog.readthedocs.io/en/stable/api.html#module-watchdog.events)を設定ファイルから指定して利用可能です.
+- ディレクトリ・ファイル操作の検知には[Watchdog](https://github.com/gorakhargosh/watchdog)を利用しており, 任意の[events API](https://python-watchdog.readthedocs.io/en/stable/api.html#module-watchdog.events)を設定ファイルから指定して利用可能です.
 
 ## Installation
 
@@ -22,13 +22,13 @@ $ pip install taskick
 
 ## Toy Example
 
-PNG画像をPDFに変換するtoy exampleを提示します.
-ここでは動作概要のみ説明するので, 詳細は[プロジェクトページ](https://github.com/kappa000/taskick-example)を参照してください.
+特定のフォルダにPNG画像が保存されるとそれを検知し, 変換したPDFを別のフォルダに保存するtoy exampleを提示します.
+ここでは動作概要のみ説明するので, 詳細は[プロジェクトページ](https://github.com/atsuyaide/taskick-example)を参照してください.
 
-まず[taskick-example](https://github.com/kappa000/taskick-example)をcloneしてください.
+まず[taskick-example](https://github.com/atsuyaide/taskick-example)をcloneしてください.
 
 ```shell
-$ git clone https://github.com/kappa000/taskick-example.git
+$ git clone https://github.com/atsuyaide/taskick-example.git
 ```
 
 cloneしたディレクトリに移動し, Taskickを起動します.
