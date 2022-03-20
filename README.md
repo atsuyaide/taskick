@@ -47,7 +47,7 @@ Go to the cloned directory and start Taskick.
 ```shell
 $ cd taskick-example
 $ pip install -r requirements.txt
-$ python -m taskick -f jobconf.yaml -v info
+$ python -m taskick -f jobconf.yaml -vv
 INFO:taskick:Loading tasks...
 INFO:taskick:Processing: example_task_1
 INFO:taskick:Immediate execution option is selected.
