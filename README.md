@@ -26,7 +26,7 @@ optional arguments:
   --file, -f        choose task configuration file (YAML)
   --log_config, -l  choose logging configuration file (YAML or other)
 $ python -m taskick -V
-Taskick 0.1.3
+Taskick 0.1.4
 ```
 
 ## Toy Example

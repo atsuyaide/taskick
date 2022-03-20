@@ -20,7 +20,7 @@ DIR_NAME = os.path.dirname(__file__)
 
 
 def test_version():
-    assert __version__ == "0.1.3"
+    assert __version__ == "0.1.4"
 
 
 def _check_job_properites(expected_job, job):
