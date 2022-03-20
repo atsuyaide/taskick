@@ -1,37 +1,37 @@
 # Taskick
 
-taskickはPythonで実装されたイベント駆動のスクリプト自動実行ライブラリです.
-Taskickを利用することで日々の退屈なルーティーン業務や作業を自動化できます.
+Taskick is an event-driven script auto-execution library implemented in Python.
+You can automate tedious routine tasks and operations.
 
-利用者は実行するスクリプトの開発に集中し, 設定ファイル(YAML)を作成するだけで任意の日時やトリガー発火時にスクリプトを自動実行できます.
+Users can concentrate on developing scripts to run, and simply create a configuration file (YAML) to automatically execute scripts triggered by any date, time, or event.
 
-[English version README](./README.md)
+The main features of Taskick are as follows
 
-Taskickの主な機能は以下です.
-
-- 実行したいスクリプトの起動タイミングは設定ファイル(YAML)で管理できます.
-- タスクの起動タイミングとして日時, またはディレクトリ・ファイル操作を発火条件とすることが可能です.
-- スケージュール実行の指定には[Crontab](https://www.tutorialspoint.com/unix_commands/crontab.htm)のフォーマットで利用できます.
-- ディレクトリ・ファイル操作の検知には[Watchdog](https://github.com/gorakhargosh/watchdog)を利用しており, 任意の[events API](https://python-watchdog.readthedocs.io/en/stable/api.html#module-watchdog.events)を設定ファイルから指定して利用可能です.
+- Script execution timing can be managed in a configuration file (YAML).
+- Can specify datetime and directory/file operations as task triggers.
+- Execution schedules can be specified in Crontab format.
+- [Watchdog](https://github.com/gorakhargosh/watchdog) is used to detect directory and file operations, and any [events API](https://python-watchdog.readthedocs.io/en/stable/api.html#module-watchdog.events) can be specified in the configuration file.
 
 ## Installation
 
 ```shell
-$ pip install taskick
+pip install taskick
 ```
 
 ## Toy Example
 
-特定のフォルダにPNG画像が保存されるとそれを検知し, 変換したPDFを別のフォルダに保存するtoy exampleを提示します.
-ここでは動作概要のみ説明するので, 詳細は[プロジェクトページ](https://github.com/atsuyaide/taskick-example)を参照してください.
+Here is a toy-eample that converts a PNG image to PDF.
+In this sample, Taskick starts a script when it detects that a PNG image has been saved to a specific folder.
+The script converts the PNG to PDF and saves it in another folder.
+For more information, please see the [project page](https://github.com/atsuyaide/taskick-example).
 
-まず[taskick-example](https://github.com/atsuyaide/taskick-example)をcloneしてください.
+First, clone [taskick-example](https://github.com/atsuyaide/taskick-example).
 
 ```shell
-$ git clone https://github.com/atsuyaide/taskick-example.git
+git clone https://github.com/atsuyaide/taskick-example.git
 ```
 
-cloneしたディレクトリに移動し, Taskickを起動します.
+Go to the cloned directory and start Taskick.
 
 ```shell
 $ cd taskick-example
@@ -49,9 +49,10 @@ INFO:taskick:Executing: auto_remove_input_folder
 Sat Mar 19 23:51:47 JST 2022 Welcome to Taskick!
 ```
 
-inputフォルダに適当なPNG画像を保存すると, outputに変換されたPDFファイルが出力されます.
-またinputフォルダにあるファイルは, 起動時または毎分自動的に削除されます.
+When a PNG image is saved in the input folder, a converted PDF file is output in the output folder.
+Files in the input folder are automatically deleted at startup or every minute.
+
 
 ![convert png to pdf](./convert_png2pdf.gif)
 
-これらのタスクは`jobconf.yaml`で制御され, Taskickが管理しています.
+These tasks are controlled by `jobconf.yaml` and managed by Taskick.
