@@ -15,7 +15,18 @@ The main features of Taskick are as follows
 ## Installation
 
 ```shell
-pip install taskick
+$ pip install taskick
+$ python -m taskick
+usage: __main__.py [-h] [--verbose] [--version] [--file] [--log_config]
+
+optional arguments:
+  -h, --help        show this help message and exit
+  --verbose, -v     increase the verbosity of messages: '-v' for normal output, '-vv' for more verbose output and '-vvv' for debug
+  --version, -V     display this application version and exit
+  --file, -f        choose task configuration file (YAML)
+  --log_config, -l  choose logging configuration file (YAML or other)
+$ python -m taskick -V
+Taskick 0.1.3
 ```
 
 ## Toy Example
