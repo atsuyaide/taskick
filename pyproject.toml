@@ -1,8 +1,9 @@
 [tool.poetry]
 name = "taskick"
-version = "0.1.3"
+version = "0.1.4"
 description = ""
 authors = ["Atsuya Ide <atsuya.ide528@gmail.com>"]
+repository = "https://github.com/atsuyaide/taskick"
 
 [tool.poetry.dependencies]
 python = "^3.8"
