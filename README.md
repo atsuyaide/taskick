@@ -64,6 +64,6 @@ When a PNG image is saved in the input folder, a converted PDF file is output in
 Files in the input folder are automatically deleted at startup or every minute.
 
 
-![convert png to pdf](./convert_png2pdf.gif)
+![convert png to pdf](./png2pdf.gif)
 
 These tasks are controlled by `jobconf.yaml` and managed by Taskick.

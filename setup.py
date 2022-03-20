@@ -19,7 +19,7 @@ setup_kwargs = {
     'author_email': 'atsuya.ide528@gmail.com',
     'maintainer': None,
     'maintainer_email': None,
-    'url': None,
+    'url': 'https://github.com/atsuyaide/taskick',
     'packages': packages,
     'package_data': package_data,
     'install_requires': install_requires,
