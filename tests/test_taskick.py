@@ -9,9 +9,9 @@ from watchdog.observers.polling import PollingObserver
 from taskick import (
     CommandExecuter,
     __version__,
-    get_execution_commands,
-    load_and_setup,
-    set_scheduled_job,
+    get_execute_command_list,
+    load_config_and_setup,
+    set_a_task_to_scheduler,
     simplify_crontab_format,
     update_scheduler,
 )
@@ -62,9 +62,9 @@ def _check_job_properites(expected_job, job):
         ("1   2   *   *   7", schedule.every(1).sunday.at("02:01:00").do(print)),
     ],
 )
-def test_set_scheduled_job(crontab_format, expected_job):
+def test_set_a_task_to_scheduler(crontab_format, expected_job):
     scheduler = schedule.Scheduler()
-    scheduler = set_scheduled_job(scheduler, crontab_format, print)
+    scheduler = set_a_task_to_scheduler(scheduler, crontab_format, print)
     for job in scheduler.jobs:
         _check_job_properites(expected_job, job)
 
@@ -220,26 +220,26 @@ def test_update_scheduler(crontab_format, expected_job_list):
         ("*a * * * *", ValueError),
     ],
 )
-def test_set_scheduled_job_given_invalid_input(crontab_format, expected_exception):
+def test_set_a_task_to_scheduler_given_invalid_input(crontab_format, expected_exception):
     scheduler = schedule.Scheduler()
     with pytest.raises(expected_exception):
-        scheduler = set_scheduled_job(scheduler, crontab_format, print)
+        scheduler = set_a_task_to_scheduler(scheduler, crontab_format, print)
 
 
 def test_update_observer():
     pass
 
 
-def test_load_and_setup():
+def test_load_config_and_setup():
     with open(os.path.join(DIR_NAME, f"jobconf_{os.name}.yaml"), "r", encoding="utf-8") as f:
         job_config = yaml.safe_load(f)
 
-    scheduler, observer, CE_list = load_and_setup(job_config)
+    scheduler, observer, task_list_needs_execute_immediately = load_config_and_setup(job_config)
 
     assert isinstance(scheduler, Scheduler)
     assert isinstance(observer, PollingObserver)
-    for CE in CE_list:
-        assert isinstance(CE, CommandExecuter)
+    for task in task_list_needs_execute_immediately:
+        assert isinstance(task, CommandExecuter)
 
 
 @pytest.mark.parametrize(
@@ -248,6 +248,6 @@ def test_load_and_setup():
         (["a", "b"], {"-c": "d"}, ["a", "b", "-c", '"d"']),
     ],
 )
-def test_get_execution_commands(commands, options, expected_commands):
-    commands = get_execution_commands(commands, options)
+def test_get_execute_command_list(commands, options, expected_commands):
+    commands = get_execute_command_list(commands, options)
     assert commands == expected_commands
