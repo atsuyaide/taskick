@@ -10,7 +10,7 @@ The main features of Taskick are as follows
 - Script execution timing can be managed in a configuration file (YAML).
 - Can specify datetime and directory/file operations as task triggers.
 - Execution schedules can be specified in Crontab format.
-- [Watchdog](https://github.com/gorakhargosh/watchdog) is used to detect directory and file operations, and any [events API](https://python-watchdog.readthedocs.io/en/stable/api.html#module-watchdog.events) can be specified in the configuration file.
+- [Watchdog](https://github.com/gorakhargosh/watchdog) is used to detect directory and file operations. It is also possible to specify any [events API](https://python-watchdog.readthedocs.io/en/stable/api.html#module-watchdog.events) on the configuration file.
 
 ## Installation
 
