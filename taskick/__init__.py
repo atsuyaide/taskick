@@ -44,19 +44,16 @@ UNITS_UPPER = {
 }
 
 
-def set_scheduled_job(scheduler: Scheduler, crontab_format: str, task: Callable, *args, **kwargs) -> Scheduler:
-    """_summary_
+def set_a_task_to_scheduler(scheduler: Scheduler, crontab_format: str, task: Callable, *args, **kwargs) -> Scheduler:
+    """Register a task to the Scheduler.
 
     Args:
         scheduler (Scheduler): _description_
-        crontab_format (str): _description_
-        task (Callable): _description_
-
-    Raises:
-        ValueError: _description_
+        crontab_format (str): Only the **simplified** Crontab format can be processed.
+        task (Callable): Tasks to be registered. If you want to pass arguments, use *args and **kwargs.
 
     Returns:
-        Scheduler: _description_
+        Scheduler: Updated Scheduler.
     """
     if re.match("^( *(\\*|\\d+|(\\*|\\d+)/(\\*|\\d+))){5} *$", crontab_format) is None:
         raise ValueError("Invalid foramt.")
@@ -189,15 +186,15 @@ def update_scheduler(scheduler: Scheduler, crontab_format: str, task: Callable, 
     Args:
         scheduler (Scheduler): _description_
         crontab_format (str): _description_
-        task (Callable): _description_
+        task (Callable): Tasks to be registered. If you want to pass arguments, use *args and **kwargs.
 
     Returns:
-        Scheduler: _description_
+        Scheduler: Updated Scheduler.
     """
     crontab_format_list = simplify_crontab_format(crontab_format)
 
     for crontab_format in crontab_format_list:
-        scheduler = set_scheduled_job(scheduler, crontab_format, task, *args, **kwargs)
+        scheduler = set_a_task_to_scheduler(scheduler, crontab_format, task, *args, **kwargs)
 
     return scheduler
 
@@ -208,10 +205,10 @@ def update_observer(observer: Observer, observe_detail: dict, task: Callable) ->
     Args:
         observer (Observer): _description_
         observe_detail (dict): _description_
-        task (Callable): _description_
+        task (Callable): Tasks to be registered.
 
     Returns:
-        Observer: _description_
+        Observer: Updated Observer.
     """
 
     handler_detail = observe_detail["handler"]
@@ -235,7 +232,7 @@ def update_observer(observer: Observer, observe_detail: dict, task: Callable) ->
     return observer
 
 
-def get_execution_commands(commands: list, options: dict) -> List[str]:
+def get_execute_command_list(commands: list, options: dict) -> List[str]:
     """_summary_
 
     Args:
@@ -263,13 +260,23 @@ class CommandExecuter:
         """_summary_
 
         Args:
-            commands (List[str]): _description_
+            task_name (str): _description_
+            command (str): _description_
+            propagate (bool, optional): _description_. Defaults to False.
         """
         self.task_name = task_name
         self.command = command
         self.propagate = propagate
 
     def _get_event_options(self, event) -> dict:
+        """_summary_
+
+        Args:
+            event (_type_): _description_
+
+        Returns:
+            dict: _description_
+        """
         if isinstance(event, FileMovedEvent):
             event_keys = ["--event_type", "--src_path", "--dest_path", "--is_directory"]
             event_values = event.key
@@ -296,7 +303,7 @@ class CommandExecuter:
         command = self.command
         if self.propagate:
             event_options = self._get_event_options(event)
-            command = get_execution_commands(command, event_options)
+            command = get_execute_command_list(command, event_options)
 
         command = " ".join(command)
         logger.debug(command)
@@ -307,6 +314,11 @@ class CommandExecuter:
         self.execute()
 
     def execute(self, command: str = None) -> None:
+        """_summary_
+
+        Args:
+            command (str, optional): _description_. Defaults to None.
+        """
         if command is None:
             command = " ".join(self.command)
 
@@ -315,7 +327,7 @@ class CommandExecuter:
         subprocess.Popen(command, shell=True)
 
 
-def load_and_setup(config: dict) -> Tuple[Scheduler, Observer, List[CommandExecuter]]:
+def load_config_and_setup(config: dict) -> Tuple[Scheduler, Observer, List[CommandExecuter]]:
     """_summary_
 
     Args:
@@ -329,7 +341,7 @@ def load_and_setup(config: dict) -> Tuple[Scheduler, Observer, List[CommandExecu
     """
     scheduler = Scheduler()
     observer = Observer()
-    immediate_execution_CE: List[CommandExecuter] = []
+    task_list_needs_execute_immediately: List[CommandExecuter] = []
     for task_name, task_detail in config.items():
         logger.debug(task_detail)
         if task_detail["status"] != 1:
@@ -346,30 +358,29 @@ def load_and_setup(config: dict) -> Tuple[Scheduler, Observer, List[CommandExecu
         else:
             options = None
 
-        commands = get_execution_commands(commands, options)
+        commands = get_execute_command_list(commands, options)
 
         if execution_detail["event_type"] is None:
-            CE = CommandExecuter(task_name, commands)
+            task = CommandExecuter(task_name, commands)
             execution_detail["immediate"] = True
         elif execution_detail["event_type"] == "time":
-            CE = CommandExecuter(task_name, commands)
+            task = CommandExecuter(task_name, commands)
             schedule_detail = execution_detail["detail"]
-            scheduler = update_scheduler(scheduler, schedule_detail["when"], CE.execute_by_scheduler)
+            scheduler = update_scheduler(scheduler, schedule_detail["when"], task.execute_by_scheduler)
         elif execution_detail["event_type"] == "file":
             if "propagate" not in execution_detail.keys():
                 execution_detail["propagate"] = False
-
-            CE = CommandExecuter(task_name, commands, execution_detail["propagate"])
+            task = CommandExecuter(task_name, commands, execution_detail["propagate"])
             observe_detail = execution_detail["detail"]
-            observer = update_observer(observer, observe_detail, CE.execute_by_observer)
+            observer = update_observer(observer, observe_detail, task.execute_by_observer)
         else:
             raise ValueError("'{:}' is not defined.".format(execution_detail["event_type"]))
 
         if execution_detail["immediate"]:
             logger.info("Immediate execution option is selected.")
-            immediate_execution_CE.append(CE)
+            task_list_needs_execute_immediately.append(task)
 
-    return scheduler, observer, immediate_execution_CE
+    return scheduler, observer, task_list_needs_execute_immediately
 
 
 class TaskRunner:
@@ -384,12 +395,12 @@ class TaskRunner:
         Raises:
             ValueError: _description_
         """
-        self.scheduler, self.observer, self.immediate_execution_CE = load_and_setup(job_config)
+        self.scheduler, self.observer, self.task_list_needs_execute_immediately = load_config_and_setup(job_config)
 
     def run(self) -> None:
         """_summary_"""
-        for CE in self.immediate_execution_CE:
-            CE.execute()
+        for task in self.task_list_needs_execute_immediately:
+            task.execute()
 
         self.observer.start()
 
