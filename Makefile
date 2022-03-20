@@ -1,5 +1,5 @@
 PACKAGE = taskick
-VERSION = 0.1.4
+VERSION = 0.1.5a0
 
 .PHONY: build-package
 build-package: ## Generate setup.py by poetry command for shared package
