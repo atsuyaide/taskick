@@ -1,6 +1,6 @@
 # Taskick
 
-Taskick is an event-driven script auto-execution library implemented in Python.
+Taskick is a library implemented in Python that automatically executes event-driven scripts.
 You can automate tedious routine tasks and operations.
 
 Users can concentrate on developing scripts to run, and simply create a configuration file (YAML) to automatically execute scripts triggered by any date, time, or event.
