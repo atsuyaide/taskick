@@ -1,6 +1,5 @@
 .vscode
 .DS_Store
-sandbox/*
 !.gitkeep
 
 # Byte-compiled / optimized / DLL files
