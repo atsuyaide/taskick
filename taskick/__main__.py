@@ -1,8 +1,9 @@
-import argparse
+import glob
 import logging
 import logging.config
 import os
 import sys
+from argparse import ArgumentParser
 
 import yaml
 
@@ -14,7 +15,7 @@ logger = logging.getLogger("taskick")
 def main() -> None:
     """_summary_"""
 
-    parser = argparse.ArgumentParser()
+    parser = ArgumentParser()
     parser.add_argument(
         "--verbose",
         "-v",
@@ -24,15 +25,14 @@ def main() -> None:
     )
     parser.add_argument("--version", "-V", action="store_true", help="display this application version and exit")
     parser.add_argument(
-        "--file", "-f", metavar="\b", type=str, default=None, help="choose task configuration file (YAML)"
+        "--file", "-f", nargs="+", type=str, default=None, help="select task configuration files (YAML)"
     )
     parser.add_argument(
         "--log_config",
         "-l",
-        metavar="\b",
         type=str,
         default=None,
-        help="choose logging configuration file (YAML or other)",
+        help="select a logging configuration file (YAML or other)",
     )
     args = parser.parse_args()
 
@@ -54,15 +54,27 @@ def main() -> None:
         sys.exit(0)
 
     if args.file is None:
+        print(f"Taskick {__version__}")
         parser.print_help()
         sys.exit(0)
 
-    with open(args.file, "r", encoding="utf-8") as f:
-        job_config = yaml.safe_load(f)
+    job_configuration_file_names = []
+    for file in args.file:
+        # Extracts only file paths
+        job_configuration_file_names.extend([x for x in glob.glob(file) if os.path.isfile(x)])
 
-    logger.info("Loading tasks...")
-    TR = TaskRunner(job_config)
-    logger.info("Done.")
+    if len(job_configuration_file_names) == 0:
+        print("Check configuration file name, path or pattern.")
+        sys.exit(0)
+
+    TR = TaskRunner()
+
+    for file_name in job_configuration_file_names:
+        logger.info(f"Loading: {file_name}")
+        with open(file_name, "r", encoding="utf-8") as f:
+            job_config = yaml.safe_load(f)
+        TR.register(job_config)
+
     TR.run()
 
 

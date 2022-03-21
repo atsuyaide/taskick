@@ -2,15 +2,10 @@ import os
 
 import pytest
 import schedule
-import yaml
-from schedule import Scheduler
-from watchdog.observers.polling import PollingObserver
 
 from taskick import (
-    CommandExecuter,
     __version__,
     get_execute_command_list,
-    load_config_and_setup,
     set_a_task_to_scheduler,
     simplify_crontab_format,
     update_scheduler,
@@ -20,7 +15,7 @@ DIR_NAME = os.path.dirname(__file__)
 
 
 def test_version():
-    assert __version__ == "0.1.5a0"
+    assert __version__ == "0.1.5"
 
 
 def _check_job_properites(expected_job, job):
@@ -230,18 +225,6 @@ def test_update_observer():
     pass
 
 
-def test_load_config_and_setup():
-    with open(os.path.join(DIR_NAME, f"jobconf_{os.name}.yaml"), "r", encoding="utf-8") as f:
-        job_config = yaml.safe_load(f)
-
-    scheduler, observer, task_list_needs_execute_immediately = load_config_and_setup(job_config)
-
-    assert isinstance(scheduler, Scheduler)
-    assert isinstance(observer, PollingObserver)
-    for task in task_list_needs_execute_immediately:
-        assert isinstance(task, CommandExecuter)
-
-
 @pytest.mark.parametrize(
     ("commands", "options", "expected_commands"),
     [
@@ -251,3 +234,15 @@ def test_load_config_and_setup():
 def test_get_execute_command_list(commands, options, expected_commands):
     commands = get_execute_command_list(commands, options)
     assert commands == expected_commands
+
+
+# def test_load_config_and_setup():
+#     with open(os.path.join(DIR_NAME, f"jobconf_{os.name}.yaml"), "r", encoding="utf-8") as f:
+#         job_config = yaml.safe_load(f)
+#
+#     scheduler, observer, task_list_needs_execute_immediately = load_config_and_setup(job_config)
+#
+#     assert isinstance(scheduler, Scheduler)
+#     assert isinstance(observer, PollingObserver)
+#     for task in task_list_needs_execute_immediately:
+#         assert isinstance(task, CommandExecuter)
