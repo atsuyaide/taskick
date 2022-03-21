@@ -327,66 +327,16 @@ class CommandExecuter:
         subprocess.Popen(command, shell=True)
 
 
-def load_config_and_setup(config: dict) -> Tuple[Scheduler, Observer, List[CommandExecuter]]:
-    """_summary_
-
-    Args:
-        config (dict): _description_
-
-    Raises:
-        ValueError: _description_
-
-    Returns:
-        Tuple[Scheduler, Observer, List[CommandExecuter]]: _description_
-    """
-    scheduler = Scheduler()
-    observer = Observer()
-    task_list_needs_execute_immediately: List[CommandExecuter] = []
-    for task_name, task_detail in config.items():
-        logger.debug(task_detail)
-        if task_detail["status"] != 1:
-            logger.info(f"Skipped: {task_name}")
-            continue
-        else:
-            logger.info(f"Processing: {task_name}")
-
-        commands = task_detail["commands"]
-        execution_detail = task_detail["execution"]
-
-        if "options" in task_detail.keys():
-            options = task_detail["options"]
-        else:
-            options = None
-
-        commands = get_execute_command_list(commands, options)
-
-        if execution_detail["event_type"] is None:
-            task = CommandExecuter(task_name, commands)
-            execution_detail["immediate"] = True
-        elif execution_detail["event_type"] == "time":
-            task = CommandExecuter(task_name, commands)
-            schedule_detail = execution_detail["detail"]
-            scheduler = update_scheduler(scheduler, schedule_detail["when"], task.execute_by_scheduler)
-        elif execution_detail["event_type"] == "file":
-            if "propagate" not in execution_detail.keys():
-                execution_detail["propagate"] = False
-            task = CommandExecuter(task_name, commands, execution_detail["propagate"])
-            observe_detail = execution_detail["detail"]
-            observer = update_observer(observer, observe_detail, task.execute_by_observer)
-        else:
-            raise ValueError("'{:}' is not defined.".format(execution_detail["event_type"]))
-
-        if execution_detail["immediate"]:
-            logger.info("Immediate execution option is selected.")
-            task_list_needs_execute_immediately.append(task)
-
-    return scheduler, observer, task_list_needs_execute_immediately
-
-
 class TaskRunner:
     """_summary_"""
 
-    def __init__(self, job_config: dict) -> None:
+    def __init__(self) -> None:
+        """_summary_"""
+        self.scheduler = Scheduler()
+        self.observer = Observer()
+        self.task_list_needs_execute_immediately = []
+
+    def register(self, job_config: dict):
         """_summary_
 
         Args:
@@ -394,8 +344,49 @@ class TaskRunner:
 
         Raises:
             ValueError: _description_
+
+        Returns:
+            _type_: _description_
         """
-        self.scheduler, self.observer, self.task_list_needs_execute_immediately = load_config_and_setup(job_config)
+        for task_name, task_detail in job_config.items():
+            logger.debug(task_detail)
+            if task_detail["status"] != 1:
+                logger.info(f"Skipped: {task_name}")
+                continue
+            else:
+                logger.info(f"Registering: {task_name}")
+
+            commands = task_detail["commands"]
+            execution_detail = task_detail["execution"]
+
+            if "options" in task_detail.keys():
+                options = task_detail["options"]
+            else:
+                options = None
+
+            commands = get_execute_command_list(commands, options)
+
+            if execution_detail["event_type"] is None:
+                task = CommandExecuter(task_name, commands)
+                execution_detail["immediate"] = True
+            elif execution_detail["event_type"] == "time":
+                task = CommandExecuter(task_name, commands)
+                schedule_detail = execution_detail["detail"]
+                self.scheduler = update_scheduler(self.scheduler, schedule_detail["when"], task.execute_by_scheduler)
+            elif execution_detail["event_type"] == "file":
+                if "propagate" not in execution_detail.keys():
+                    execution_detail["propagate"] = False
+                task = CommandExecuter(task_name, commands, execution_detail["propagate"])
+                observe_detail = execution_detail["detail"]
+                self.observer = update_observer(self.observer, observe_detail, task.execute_by_observer)
+            else:
+                raise ValueError("'{:}' is not defined.".format(execution_detail["event_type"]))
+
+            if execution_detail["immediate"]:
+                logger.info("Immediate execution option is selected.")
+                self.task_list_needs_execute_immediately.append(task)
+
+        return self
 
     def run(self) -> None:
         """_summary_"""
