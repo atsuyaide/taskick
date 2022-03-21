@@ -2,12 +2,8 @@ import os
 
 import pytest
 import schedule
-import yaml
-from schedule import Scheduler
-from watchdog.observers.polling import PollingObserver
 
 from taskick import (
-    CommandExecuter,
     __version__,
     get_execute_command_list,
     set_a_task_to_scheduler,
@@ -19,7 +15,7 @@ DIR_NAME = os.path.dirname(__file__)
 
 
 def test_version():
-    assert __version__ == "0.1.5a0"
+    assert __version__ == "0.1.5"
 
 
 def _check_job_properites(expected_job, job):

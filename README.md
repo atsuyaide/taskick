@@ -17,7 +17,7 @@ The main features of Taskick are as follows
 ```shell
 $ pip install taskick
 $ python -m taskick
-Taskick 0.1.5a0
+Taskick 0.1.5
 usage: __main__.py [-h] [--verbose] [--version] [--file FILE [FILE ...]]
                    [--log_config LOG_CONFIG]
 
@@ -70,6 +70,6 @@ When a PNG image is saved in the input folder, a converted PDF file is output in
 Files in the input folder are automatically deleted at startup or every minute.
 
 
-![convert png to pdf](./png2pdf.gif)
+![png2gif](https://github.com/atsuyaide/taskick/blob/main/png2pdf.gif)
 
 These tasks are controlled by `jobconf.yaml` and managed by Taskick.

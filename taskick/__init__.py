@@ -7,7 +7,7 @@ import logging
 import re
 import subprocess
 import time
-from typing import Callable, List, Tuple
+from typing import Callable, List
 
 from schedule import Scheduler
 from watchdog.events import FileMovedEvent

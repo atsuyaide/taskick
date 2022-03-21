@@ -12,7 +12,7 @@ install_requires = \
 
 setup_kwargs = {
     'name': 'taskick',
-    'version': '0.1.5a0',
+    'version': '0.1.5',
     'description': '',
     'long_description': None,
     'author': 'Atsuya Ide',
