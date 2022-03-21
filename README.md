@@ -32,7 +32,7 @@ optional arguments:
   --log_config LOG_CONFIG, -l LOG_CONFIG
                         select a logging configuration file (YAML or other)
 $ python -m taskick -V
-Taskick 0.1.5a0
+Taskick 0.1.5
 ```
 
 ## Toy Example
