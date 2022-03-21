@@ -53,17 +53,17 @@ Go to the cloned directory and start Taskick.
 ```shell
 $ cd taskick-example
 $ pip install -r requirements.txt
-$ python -m taskick -f jobconf.yaml -vv
-INFO:taskick:Loading tasks...
-INFO:taskick:Processing: example_task_1
+$ python -m taskick -f welcome.yaml jobconf.yaml -vv
+INFO:taskick:Loading: welcome.yaml
+INFO:taskick:Registering: Welcome_taskick
 INFO:taskick:Immediate execution option is selected.
-INFO:taskick:Processing: auto_remove_input_folder
+INFO:taskick:Loading: jobconf.yaml
+INFO:taskick:Registering: remove_input_folder
 INFO:taskick:Immediate execution option is selected.
-INFO:taskick:Processing: png2pdf
-INFO:taskick:Done.
-INFO:taskick:Executing: example_task_1
-INFO:taskick:Executing: auto_remove_input_folder
-Sat Mar 19 23:51:47 JST 2022 Welcome to Taskick!
+INFO:taskick:Registering: png2pdf
+INFO:taskick:Executing: Welcome_taskick
+INFO:taskick:Executing: remove_input_folder
+Tue Mar 22 02:52:23 JST 2022 Welcome to Taskick!
 ```
 
 When a PNG image is saved in the input folder, a converted PDF file is output in the output folder.
