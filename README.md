@@ -1,7 +1,7 @@
 # Taskick
 
-Taskick is an event-driven library implemented in Python that automatically executes scripts.
-You can automate tedious routine tasks and operations.
+Taskick is an event-driven Python library that automatically executes scripts or any commands.
+It not only automates tedious routine tasks and operations, but also makes it easy to develop [applications](#toy-example).
 
 Users can concentrate on developing scripts to run, and simply create a configuration file (YAML) to automatically execute scripts triggered by any date, time, or event.
 
@@ -17,16 +17,22 @@ The main features of Taskick are as follows
 ```shell
 $ pip install taskick
 $ python -m taskick
-usage: __main__.py [-h] [--verbose] [--version] [--file] [--log_config]
+Taskick 0.1.5a0
+usage: __main__.py [-h] [--verbose] [--version] [--file FILE [FILE ...]]
+                   [--log_config LOG_CONFIG]
 
 optional arguments:
-  -h, --help        show this help message and exit
-  --verbose, -v     increase the verbosity of messages: '-v' for normal output, '-vv' for more verbose output and '-vvv' for debug
-  --version, -V     display this application version and exit
-  --file, -f        choose task configuration file (YAML)
-  --log_config, -l  choose logging configuration file (YAML or other)
+  -h, --help            show this help message and exit
+  --verbose, -v         increase the verbosity of messages: '-v' for normal
+                        output, '-vv' for more verbose output and '-vvv' for
+                        debug
+  --version, -V         display this application version and exit
+  --file FILE [FILE ...], -f FILE [FILE ...]
+                        select task configuration files (YAML)
+  --log_config LOG_CONFIG, -l LOG_CONFIG
+                        select a logging configuration file (YAML or other)
 $ python -m taskick -V
-Taskick 0.1.4
+Taskick 0.1.5a0
 ```
 
 ## Toy Example

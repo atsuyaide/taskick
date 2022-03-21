@@ -1,9 +1,9 @@
-import argparse
 import glob
 import logging
 import logging.config
 import os
 import sys
+from argparse import ArgumentParser
 
 import yaml
 
@@ -15,7 +15,7 @@ logger = logging.getLogger("taskick")
 def main() -> None:
     """_summary_"""
 
-    parser = argparse.ArgumentParser()
+    parser = ArgumentParser()
     parser.add_argument(
         "--verbose",
         "-v",
@@ -54,6 +54,7 @@ def main() -> None:
         sys.exit(0)
 
     if args.file is None:
+        print(f"Taskick {__version__}")
         parser.print_help()
         sys.exit(0)
 
