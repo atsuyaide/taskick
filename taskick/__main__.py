@@ -46,7 +46,7 @@ def main() -> None:
             with open(args.log_config, "r") as f:
                 config = yaml.safe_load(f.read())
                 logging.config.dictConfig(config)
-        else:  # .conf, .ini, ...
+        else:  # *.(conf|ini|...)
             logging.config.fileConfig(args.log_config)
 
     if args.version:

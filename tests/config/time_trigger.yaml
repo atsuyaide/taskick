@@ -1,12 +1,14 @@
 example_time_trigger_task_1:
   status: 1
   commands:
-    - echo sample message
+    - ls
   execution:
     startup: true
     event_type: time
     detail:
       when: "*/2 * * * *"
+  options:
+    -la: none # ls -la
 
 example_time_trigger_task_2:
   status: 1

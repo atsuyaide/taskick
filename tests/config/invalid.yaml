@@ -25,7 +25,7 @@ invalid_event_handler:
     detail:
       path: ./
       handler:
-        name: DoesNotExistEventHandler
+        name: DoesNotExistsEventHandler
       recursive: false
       when:
         - modified

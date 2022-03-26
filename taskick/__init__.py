@@ -324,7 +324,11 @@ class CommandExecuter:
 
         logger.info(f"Executing: {self.task_name}")
         logger.debug(f"Detail: {command}")
-        subprocess.Popen(command, shell=True)
+        return subprocess.Popen(command, shell=True)
+
+    @property
+    def process(self):
+        return self.process
 
 
 class TaskRunner:
@@ -336,6 +340,7 @@ class TaskRunner:
         self.observer = Observer()
         self.startup_execution_tasks = {}
         self.registered_tasks = {}
+        self.await_items = {}  # {"A": "B"} -> "A" waits for "B" to finish.
 
     def register(self, job_config: dict):
         """_summary_
@@ -349,24 +354,18 @@ class TaskRunner:
         Returns:
             _type_: _description_
         """
-        print(job_config)
         for task_name, task_detail in job_config.items():
             logger.debug(task_detail)
             if task_detail["status"] != 1:
                 logger.info(f"Skipped: {task_name}")
                 continue
             else:
-                logger.info(f"Registering: {task_name}")
+                logger.info(f"Processing: {task_name}")
 
-            commands = task_detail["commands"]
+            options = task_detail["options"] if "options" in task_detail.keys() else None
+            commands = get_execute_command_list(task_detail["commands"], options)
+
             execution_detail = task_detail["execution"]
-
-            if "options" in task_detail.keys():
-                options = task_detail["options"]
-            else:
-                options = None
-
-            commands = get_execute_command_list(commands, options)
 
             if execution_detail["event_type"] is None:
                 task = CommandExecuter(task_name, commands)
@@ -386,6 +385,8 @@ class TaskRunner:
 
             if execution_detail["startup"]:
                 logger.info("Startup execution option is selected.")
+                if "await_task" in execution_detail.keys():
+                    self.await_items[task_name] = execution_detail["await_task"]
                 self.startup_execution_tasks[task_name] = task
 
             if task_name in self.registered_tasks.keys():
@@ -398,8 +399,15 @@ class TaskRunner:
 
     def run(self) -> None:
         """_summary_"""
-        for task in self.startup_execution_tasks.values():
-            task.execute()
+        executing_tasks = {}
+        for task_name, task in self.startup_execution_tasks.items():
+            if task_name in self.await_items.keys():
+                for await_task_name in self.await_items[task_name]:
+                    if await_task_name not in executing_tasks.keys():
+                        raise ValueError(f'"{await_task_name}" is not runnning.')
+                    logger.info(f'"{task_name}" is waiting for "{await_task_name}" to finish.')
+                    executing_tasks[await_task_name].wait()
+            executing_tasks[task_name] = task.execute()
 
         self.observer.start()
 
