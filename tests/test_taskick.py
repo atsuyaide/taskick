@@ -18,7 +18,7 @@ logger = logging.getLogger("taskick")
 
 
 def test_version():
-    assert __version__ == "0.1.5"
+    assert __version__ == "0.1.5a4"
 
 
 def _check_job_properties(expected_job, job):

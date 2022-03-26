@@ -17,7 +17,7 @@ The main features of Taskick are as follows
 ```shell
 $ pip install taskick
 $ python -m taskick
-Taskick 0.1.5
+Taskick 0.1.5a4
 usage: __main__.py [-h] [--verbose] [--version] [--file FILE [FILE ...]]
                    [--log_config LOG_CONFIG]
 
@@ -32,7 +32,7 @@ optional arguments:
   --log_config LOG_CONFIG, -l LOG_CONFIG
                         select a logging configuration file (YAML or other)
 $ python -m taskick -V
-Taskick 0.1.5
+Taskick 0.1.5a4
 ```
 
 ## Toy Example
