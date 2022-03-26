@@ -1,4 +1,4 @@
-__version__ = "0.1.5"
+__version__ = "0.1.5a4"
 
 
 import importlib
@@ -170,7 +170,7 @@ def simplify_crontab_format(crontab_format: str) -> List[str]:
                 s, e = map(int, unit_str.split("-"))
                 e += 1
             else:
-                raise ValueError
+                raise ValueError("Invalid format.")
 
             cv_list.extend(list(map(str, list(range(s, e, int(interval))))))
         merged_cron_str_list.append(cv_list)
@@ -256,17 +256,19 @@ def get_execute_command_list(commands: list, options: dict) -> List[str]:
 class CommandExecuter:
     """_summary_"""
 
-    def __init__(self, task_name: str, command: str, propagate: bool = False) -> None:
+    def __init__(self, task_name: str, command: str, propagate: bool = False, shell: bool = False) -> None:
         """_summary_
 
         Args:
             task_name (str): _description_
             command (str): _description_
             propagate (bool, optional): _description_. Defaults to False.
+            shell (bool, optional): _description_. Defaults to False.
         """
         self.task_name = task_name
         self.command = command
         self.propagate = propagate
+        self.shell = shell
 
     def _get_event_options(self, event) -> dict:
         """_summary_
@@ -324,7 +326,7 @@ class CommandExecuter:
 
         logger.info(f"Executing: {self.task_name}")
         logger.debug(f"Detail: {command}")
-        subprocess.Popen(command, shell=True)
+        return subprocess.Popen(command, shell=self.shell)
 
 
 class TaskRunner:
@@ -334,7 +336,9 @@ class TaskRunner:
         """_summary_"""
         self.scheduler = Scheduler()
         self.observer = Observer()
-        self.task_list_needs_execute_immediately = []
+        self.startup_execution_tasks = {}
+        self.registered_tasks = {}
+        self.await_tasks = {}  # {"A": "B"} -> "A" waits for "B" to finish.
 
     def register(self, job_config: dict):
         """_summary_
@@ -353,45 +357,58 @@ class TaskRunner:
             if task_detail["status"] != 1:
                 logger.info(f"Skipped: {task_name}")
                 continue
-            else:
-                logger.info(f"Registering: {task_name}")
 
-            commands = task_detail["commands"]
+            logger.info(f"Processing: {task_name}")
+            options = task_detail["options"] if "options" in task_detail.keys() else None
             execution_detail = task_detail["execution"]
 
-            if "options" in task_detail.keys():
-                options = task_detail["options"]
-            else:
-                options = None
-
-            commands = get_execute_command_list(commands, options)
+            executor_args = {
+                "task_name": task_name,
+                "command": get_execute_command_list(task_detail["commands"], options),
+                "propagate": False if "propagate" not in execution_detail.keys() else execution_detail["propagate"],
+                "shell": True if "shell" not in execution_detail.keys() else execution_detail["shell"],
+            }
+            task = CommandExecuter(**executor_args)
 
             if execution_detail["event_type"] is None:
-                task = CommandExecuter(task_name, commands)
-                execution_detail["immediate"] = True
+                execution_detail["startup"] = True
             elif execution_detail["event_type"] == "time":
-                task = CommandExecuter(task_name, commands)
                 schedule_detail = execution_detail["detail"]
                 self.scheduler = update_scheduler(self.scheduler, schedule_detail["when"], task.execute_by_scheduler)
             elif execution_detail["event_type"] == "file":
-                if "propagate" not in execution_detail.keys():
-                    execution_detail["propagate"] = False
-                task = CommandExecuter(task_name, commands, execution_detail["propagate"])
                 observe_detail = execution_detail["detail"]
                 self.observer = update_observer(self.observer, observe_detail, task.execute_by_observer)
             else:
-                raise ValueError("'{:}' is not defined.".format(execution_detail["event_type"]))
+                raise ValueError("'{:}' does not defined.".format(execution_detail["event_type"]))
 
-            if execution_detail["immediate"]:
-                logger.info("Immediate execution option is selected.")
-                self.task_list_needs_execute_immediately.append(task)
+            if execution_detail["startup"]:
+                logger.info("Startup execution option is selected.")
+                if "await_task" in execution_detail.keys():
+                    self.await_tasks[task_name] = execution_detail["await_task"]
+                self.startup_execution_tasks[task_name] = task
+
+            if task_name in self.registered_tasks.keys():
+                raise ValueError(f"{task_name} is already exists.")
+
+            self.registered_tasks[task_name] = task
+            logger.info(f"Registered: {task_name}")
 
         return self
 
+    def _await_running_task(self, task_name) -> None:
+        for await_task_name in self.await_tasks[task_name]:
+            if await_task_name not in self.executing_tasks.keys():
+                raise ValueError(f'"{await_task_name}" is not running.')
+            logger.info(f'"{task_name}" is waiting for "{await_task_name}" to finish.')
+            self.executing_tasks[await_task_name].wait()
+
     def run(self) -> None:
         """_summary_"""
-        for task in self.task_list_needs_execute_immediately:
-            task.execute()
+        self.executing_tasks = {}
+        for task_name, task in self.startup_execution_tasks.items():
+            if task_name in self.await_tasks.keys():
+                self._await_running_task(task_name)
+            self.executing_tasks[task_name] = task.execute()
 
         self.observer.start()
 
@@ -409,3 +426,25 @@ class TaskRunner:
         finally:
             self.observer.stop()
             self.observer.join()
+
+    def __str__(self) -> str:
+        pass
+
+    def __repr__(self) -> str:
+        pass
+
+    @property
+    def task_count(self) -> int:
+        return len(self.registered_tasks)
+
+    @property
+    def startup_task_count(self) -> int:
+        return len(self.startup_execution_tasks)
+
+    @property
+    def tasks(self) -> dict:
+        return self.registered_tasks
+
+    @property
+    def startup_tasks(self) -> dict:
+        return self.startup_execution_tasks

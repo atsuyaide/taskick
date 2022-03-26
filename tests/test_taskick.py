@@ -1,9 +1,12 @@
+import logging
 import os
 
 import pytest
 import schedule
+import yaml
 
 from taskick import (
+    TaskRunner,
     __version__,
     get_execute_command_list,
     set_a_task_to_scheduler,
@@ -11,14 +14,14 @@ from taskick import (
     update_scheduler,
 )
 
-DIR_NAME = os.path.dirname(__file__)
+logger = logging.getLogger("taskick")
 
 
 def test_version():
-    assert __version__ == "0.1.5"
+    assert __version__ == "0.1.5a4"
 
 
-def _check_job_properites(expected_job, job):
+def _check_job_properties(expected_job, job):
     assert expected_job.interval == job.interval
     assert expected_job.latest == job.latest
     assert expected_job.unit == job.unit
@@ -61,7 +64,7 @@ def test_set_a_task_to_scheduler(crontab_format, expected_job):
     scheduler = schedule.Scheduler()
     scheduler = set_a_task_to_scheduler(scheduler, crontab_format, print)
     for job in scheduler.jobs:
-        _check_job_properites(expected_job, job)
+        _check_job_properties(expected_job, job)
 
 
 @pytest.mark.parametrize(
@@ -203,7 +206,7 @@ def test_update_scheduler(crontab_format, expected_job_list):
     scheduler = update_scheduler(scheduler, crontab_format, print)
     assert len(scheduler.jobs) == len(expected_job_list)
     for expected_job, job in zip(expected_job_list, scheduler.jobs):
-        _check_job_properites(expected_job, job)
+        _check_job_properties(expected_job, job)
 
 
 @pytest.mark.parametrize(
@@ -246,3 +249,46 @@ def test_get_execute_command_list(commands, options, expected_commands):
 #     assert isinstance(observer, PollingObserver)
 #     for task in task_list_needs_execute_immediately:
 #         assert isinstance(task, CommandExecuter)
+
+
+@pytest.mark.parametrize(
+    ("file_name", "expected_task_count", "expected_startup_task_count"),
+    [
+        ("config/vanilla.yaml", 1, 1),
+        ("config/time_trigger.yaml", 2, 1),
+        ("config/file_trigger.yaml", 3, 0),
+    ],
+)
+def test_register(file_name, expected_task_count, expected_startup_task_count):
+    test_dir = os.path.dirname(__file__)
+    with open(os.path.join(test_dir, file_name), "r", encoding="utf-8") as f:
+        config = yaml.safe_load(f)
+
+    TR = TaskRunner()
+    TR.register(config)
+    assert TR.task_count == expected_task_count
+    assert TR.startup_task_count == expected_startup_task_count
+
+
+@pytest.mark.parametrize(
+    ("task_name", "expected_exception"),
+    [
+        ("invalid_event_type", ValueError),
+        ("invalid_crontab_format", ValueError),
+        ("invalid_event_handler", AttributeError),
+        ("invalid_event_type_of_watchdog", AttributeError),
+    ],
+)
+def test_invalid_registration(task_name, expected_exception):
+    test_dir = os.path.dirname(__file__)
+    with open(os.path.join(test_dir, "config/invalid.yaml"), "r", encoding="utf-8") as f:
+        config = yaml.safe_load(f)
+
+    invalid_config = {task_name: config[task_name]}
+    TR = TaskRunner()
+    with pytest.raises(expected_exception):
+        TR.register(invalid_config)
+
+
+def test_run():
+    pass
