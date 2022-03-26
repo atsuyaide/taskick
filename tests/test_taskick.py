@@ -252,21 +252,22 @@ def test_get_execute_command_list(commands, options, expected_commands):
 
 
 @pytest.mark.parametrize(
-    ("file_name", "expected_task_num"),
+    ("file_name", "expected_task_count", "expected_startup_task_count"),
     [
-        ("config/vanilla.yaml", 1),
-        ("config/time_trigger.yaml", 2),
-        ("config/file_trigger.yaml", 3),
+        ("config/vanilla.yaml", 1, 1),
+        ("config/time_trigger.yaml", 2, 1),
+        ("config/file_trigger.yaml", 3, 0),
     ],
 )
-def test_register(file_name, expected_task_num):
+def test_register(file_name, expected_task_count, expected_startup_task_count):
     test_dir = os.path.dirname(__file__)
     with open(os.path.join(test_dir, file_name), "r", encoding="utf-8") as f:
         config = yaml.safe_load(f)
 
     TR = TaskRunner()
     TR.register(config)
-    assert len(TR) == expected_task_num
+    assert TR.task_count == expected_task_count
+    assert TR.startup_task_count == expected_startup_task_count
 
 
 @pytest.mark.parametrize(
@@ -283,8 +284,7 @@ def test_invalid_registration(task_name, expected_exception):
     with open(os.path.join(test_dir, "config/invalid.yaml"), "r", encoding="utf-8") as f:
         config = yaml.safe_load(f)
 
-    invalid_config = {}
-    invalid_config[task_name] = config[task_name]
+    invalid_config = {task_name: config[task_name]}
     TR = TaskRunner()
     with pytest.raises(expected_exception):
         TR.register(invalid_config)

@@ -10,7 +10,7 @@ invalid_crontab_format:
   commands:
     - echo sample message
   execution:
-    immediate: true
+    startup: true
     event_type: time
     detail:
       when: "* * * * * *"
@@ -20,7 +20,7 @@ invalid_event_handler:
   commands:
     - echo example message
   execution:
-    immediate: false
+    startup: false
     event_type: file
     detail:
       path: ./
@@ -35,7 +35,7 @@ invalid_event_type_of_watchdog:
   commands:
     - echo example message
   execution:
-    immediate: false
+    startup: false
     event_type: file
     detail:
       path: ./

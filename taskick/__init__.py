@@ -334,7 +334,7 @@ class TaskRunner:
         """_summary_"""
         self.scheduler = Scheduler()
         self.observer = Observer()
-        self.task_list_needs_execute_immediately = {}
+        self.startup_execution_tasks = {}
         self.registered_tasks = {}
 
     def register(self, job_config: dict):
@@ -370,7 +370,7 @@ class TaskRunner:
 
             if execution_detail["event_type"] is None:
                 task = CommandExecuter(task_name, commands)
-                execution_detail["immediate"] = True
+                execution_detail["startup"] = True
             elif execution_detail["event_type"] == "time":
                 task = CommandExecuter(task_name, commands)
                 schedule_detail = execution_detail["detail"]
@@ -384,9 +384,9 @@ class TaskRunner:
             else:
                 raise ValueError("'{:}' does not defined.".format(execution_detail["event_type"]))
 
-            if execution_detail["immediate"]:
-                logger.info("Immediate execution option is selected.")
-                self.task_list_needs_execute_immediately[task_name] = task
+            if execution_detail["startup"]:
+                logger.info("Startup execution option is selected.")
+                self.startup_execution_tasks[task_name] = task
 
             if task_name in self.registered_tasks.keys():
                 raise ValueError(f"{task_name} is already exists.")
@@ -398,7 +398,7 @@ class TaskRunner:
 
     def run(self) -> None:
         """_summary_"""
-        for task in self.task_list_needs_execute_immediately.values():
+        for task in self.startup_execution_tasks.values():
             task.execute()
 
         self.observer.start()
@@ -424,5 +424,18 @@ class TaskRunner:
     def __repr__(self) -> str:
         pass
 
-    def __len__(self) -> int:
+    @property
+    def task_count(self) -> int:
         return len(self.registered_tasks)
+
+    @property
+    def startup_task_count(self) -> int:
+        return len(self.startup_execution_tasks)
+
+    @property
+    def tasks(self) -> dict:
+        return self.registered_tasks
+
+    @property
+    def startup_tasks(self) -> dict:
+        return self.startup_execution_tasks
