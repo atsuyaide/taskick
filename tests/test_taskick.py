@@ -21,7 +21,7 @@ def test_version():
     assert __version__ == "0.1.5"
 
 
-def _check_job_properites(expected_job, job):
+def _check_job_properties(expected_job, job):
     assert expected_job.interval == job.interval
     assert expected_job.latest == job.latest
     assert expected_job.unit == job.unit
@@ -64,7 +64,7 @@ def test_set_a_task_to_scheduler(crontab_format, expected_job):
     scheduler = schedule.Scheduler()
     scheduler = set_a_task_to_scheduler(scheduler, crontab_format, print)
     for job in scheduler.jobs:
-        _check_job_properites(expected_job, job)
+        _check_job_properties(expected_job, job)
 
 
 @pytest.mark.parametrize(
@@ -206,7 +206,7 @@ def test_update_scheduler(crontab_format, expected_job_list):
     scheduler = update_scheduler(scheduler, crontab_format, print)
     assert len(scheduler.jobs) == len(expected_job_list)
     for expected_job, job in zip(expected_job_list, scheduler.jobs):
-        _check_job_properites(expected_job, job)
+        _check_job_properties(expected_job, job)
 
 
 @pytest.mark.parametrize(
