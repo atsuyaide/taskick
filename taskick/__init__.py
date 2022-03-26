@@ -340,7 +340,7 @@ class TaskRunner:
         self.observer = Observer()
         self.startup_execution_tasks = {}
         self.registered_tasks = {}
-        self.await_items = {}  # {"A": "B"} -> "A" waits for "B" to finish.
+        self.await_tasks = {}  # {"A": "B"} -> "A" waits for "B" to finish.
 
     def register(self, job_config: dict):
         """_summary_
@@ -386,7 +386,7 @@ class TaskRunner:
             if execution_detail["startup"]:
                 logger.info("Startup execution option is selected.")
                 if "await_task" in execution_detail.keys():
-                    self.await_items[task_name] = execution_detail["await_task"]
+                    self.await_tasks[task_name] = execution_detail["await_task"]
                 self.startup_execution_tasks[task_name] = task
 
             if task_name in self.registered_tasks.keys():
@@ -397,17 +397,20 @@ class TaskRunner:
 
         return self
 
+    def _await_running_task(self, task_name) -> None:
+        for await_task_name in self.await_tasks[task_name]:
+            if await_task_name not in self.executing_tasks.keys():
+                raise ValueError(f'"{await_task_name}" is not running.')
+            logger.info(f'"{task_name}" is waiting for "{await_task_name}" to finish.')
+            self.executing_tasks[await_task_name].wait()
+
     def run(self) -> None:
         """_summary_"""
-        executing_tasks = {}
+        self.executing_tasks = {}
         for task_name, task in self.startup_execution_tasks.items():
-            if task_name in self.await_items.keys():
-                for await_task_name in self.await_items[task_name]:
-                    if await_task_name not in executing_tasks.keys():
-                        raise ValueError(f'"{await_task_name}" is not runnning.')
-                    logger.info(f'"{task_name}" is waiting for "{await_task_name}" to finish.')
-                    executing_tasks[await_task_name].wait()
-            executing_tasks[task_name] = task.execute()
+            if task_name in self.await_tasks.keys():
+                self._await_running_task(task_name)
+            self.executing_tasks[task_name] = task.execute()
 
         self.observer.start()
 
