@@ -1,10 +1,10 @@
 example_time_trigger_task_1:
   status: 1
   commands:
-    - ls
+    - "ls"
   execution:
     startup: true
-    event_type: time
+    event_type: "time"
     detail:
       when: "*/2 * * * *"
   options:
@@ -13,9 +13,9 @@ example_time_trigger_task_1:
 example_time_trigger_task_2:
   status: 1
   commands:
-    - echo sample message
+    - "echo sample message"
   execution:
     startup: false
-    event_type: time
+    event_type: "time"
     detail:
       when: "*/2 * * * *"

@@ -15,7 +15,7 @@ The main features of Taskick are as follows
 ## Installation
 
 ```shell
-$ pip install taskick
+$ pip install taskick==0.1.5a4
 $ python -m taskick
 Taskick 0.1.5a4
 usage: __main__.py [-h] [--verbose] [--version] [--file FILE [FILE ...]]

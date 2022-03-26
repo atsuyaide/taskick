@@ -1,55 +1,55 @@
 example_file_trigger_task_1:
   status: 1
   commands:
-    - echo example message
+    - "echo example message"
   execution:
     startup: false
-    event_type: file
+    event_type: "file"
     detail:
-      path: ./
+      path: "./"
       handler:
-        name: FileSystemEventHandler
+        name: "FileSystemEventHandler"
       recursive: false
       when:
-        - modified
+        - "modified"
 
 example_file_trigger_task_2:
   status: 1
   commands:
-    - echo example message
+    - "echo example message"
   execution:
     startup: false
-    event_type: file
+    event_type: "file"
     detail:
-      path: ./sandbox
+      path: "./sandbox"
       recursive: false
       handler:
-        name: PatternMatchingEventHandler
+        name: "PatternMatchingEventHandler"
         args:
           patterns:
             - "*.csv"
       when:
-        - created
-        - modified
+        - "created"
+        - "modified"
   options:
-    --message: Taskick! This task runs when file created in observing dir.
+    --message: "Taskick! This task runs when file created in observing dir."
 
 example_file_trigger_task_3:
   status: 1
   commands:
-    - echo example message
+    - "echo example message"
   execution:
     startup: false
-    event_type: file
+    event_type: "file"
     propagate: true
     detail:
-      path: ./sandbox
+      path: "./sandbox"
       recursive: false
       handler:
-        name: PatternMatchingEventHandler
+        name: "PatternMatchingEventHandler"
         args:
           patterns:
             - "*.py"
       when:
-        - moved
-        - modified
+        - "moved"
+        - "modified"
