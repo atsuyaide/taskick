@@ -1,46 +1,46 @@
 invalid_event_type:
   status: 1
   commands:
-    - echo example message
+    - "echo example message"
   execution:
-    event_type: abc
+    event_type: "abc"
 
 invalid_crontab_format:
   status: 1
   commands:
-    - echo sample message
+    - "echo sample message"
   execution:
     startup: true
-    event_type: time
+    event_type: "time"
     detail:
       when: "* * * * * *"
 
 invalid_event_handler:
   status: 1
   commands:
-    - echo example message
+    - "echo example message"
   execution:
     startup: false
-    event_type: file
+    event_type: "file"
     detail:
-      path: ./
+      path: "./"
       handler:
-        name: DoesNotExistsEventHandler
+        name: "DoesNotExistsEventHandler"
       recursive: false
       when:
-        - modified
+        - "modified"
 
 invalid_event_type_of_watchdog:
   status: 1
   commands:
-    - echo example message
+    - "echo example message"
   execution:
     startup: false
-    event_type: file
+    event_type: "file"
     detail:
-      path: ./
+      path: "./"
       handler:
-        name: DoesNotExistEventHandler
+        name: "DoesNotExistEventHandler"
       recursive: false
       when:
-        - hoge
+        - "hoge"
