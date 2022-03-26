@@ -256,17 +256,19 @@ def get_execute_command_list(commands: list, options: dict) -> List[str]:
 class CommandExecuter:
     """_summary_"""
 
-    def __init__(self, task_name: str, command: str, propagate: bool = False) -> None:
+    def __init__(self, task_name: str, command: str, propagate: bool = False, shell: bool = False) -> None:
         """_summary_
 
         Args:
             task_name (str): _description_
             command (str): _description_
             propagate (bool, optional): _description_. Defaults to False.
+            shell (bool, optional): _description_. Defaults to False.
         """
         self.task_name = task_name
         self.command = command
         self.propagate = propagate
+        self.shell = shell
 
     def _get_event_options(self, event) -> dict:
         """_summary_
@@ -324,11 +326,7 @@ class CommandExecuter:
 
         logger.info(f"Executing: {self.task_name}")
         logger.debug(f"Detail: {command}")
-        return subprocess.Popen(command, shell=True)
-
-    @property
-    def process(self):
-        return self.process
+        return subprocess.Popen(command, shell=self.shell)
 
 
 class TaskRunner:
@@ -359,25 +357,25 @@ class TaskRunner:
             if task_detail["status"] != 1:
                 logger.info(f"Skipped: {task_name}")
                 continue
-            else:
-                logger.info(f"Processing: {task_name}")
 
+            logger.info(f"Processing: {task_name}")
             options = task_detail["options"] if "options" in task_detail.keys() else None
-            commands = get_execute_command_list(task_detail["commands"], options)
-
             execution_detail = task_detail["execution"]
 
+            executor_args = {
+                "task_name": task_name,
+                "command": get_execute_command_list(task_detail["commands"], options),
+                "propagate": False if "propagate" not in execution_detail.keys() else execution_detail["propagate"],
+                "shell": True if "shell" not in execution_detail.keys() else execution_detail["shell"],
+            }
+            task = CommandExecuter(**executor_args)
+
             if execution_detail["event_type"] is None:
-                task = CommandExecuter(task_name, commands)
                 execution_detail["startup"] = True
             elif execution_detail["event_type"] == "time":
-                task = CommandExecuter(task_name, commands)
                 schedule_detail = execution_detail["detail"]
                 self.scheduler = update_scheduler(self.scheduler, schedule_detail["when"], task.execute_by_scheduler)
             elif execution_detail["event_type"] == "file":
-                if "propagate" not in execution_detail.keys():
-                    execution_detail["propagate"] = False
-                task = CommandExecuter(task_name, commands, execution_detail["propagate"])
                 observe_detail = execution_detail["detail"]
                 self.observer = update_observer(self.observer, observe_detail, task.execute_by_observer)
             else:
@@ -393,7 +391,7 @@ class TaskRunner:
                 raise ValueError(f"{task_name} is already exists.")
 
             self.registered_tasks[task_name] = task
-            logger.info(f"Registed: {task_name}")
+            logger.info(f"Registered: {task_name}")
 
         return self
 

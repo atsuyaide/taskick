@@ -55,15 +55,20 @@ $ cd taskick-example
 $ pip install -r requirements.txt
 $ python -m taskick -f welcome.yaml main.yaml -vv
 INFO:taskick:Loading: welcome.yaml
-INFO:taskick:Registering: Welcome_taskick
-INFO:taskick:Immediate execution option is selected.
+INFO:taskick:Processing: Welcome_taskick
+INFO:taskick:Startup execution option is selected.
+INFO:taskick:Registered: Welcome_taskick
 INFO:taskick:Loading: main.yaml
-INFO:taskick:Registering: remove_input_folder
-INFO:taskick:Immediate execution option is selected.
-INFO:taskick:Registering: png2pdf
+INFO:taskick:Processing: remove_files_in_input_folder
+INFO:taskick:Startup execution option is selected.
+INFO:taskick:Registered: remove_files_in_input_folder
+INFO:taskick:Processing: png2pdf
+INFO:taskick:Registered: png2pdf
 INFO:taskick:Executing: Welcome_taskick
-INFO:taskick:Executing: remove_input_folder
-Tue Mar 22 02:52:23 JST 2022 Welcome to Taskick!
+INFO:taskick:"remove_files_in_input_folder" is waiting for "Welcome_taskick" to finish.
+Sun Mar 27 00:10:45 JST 2022 Welcome to Taskick!
+waiting 5 seconds...
+INFO:taskick:Executing: remove_files_in_input_folder
 ```
 
 When a PNG image is saved in the input folder, a converted PDF file is output in the output folder.
@@ -72,4 +77,4 @@ Files in the input folder are automatically deleted at startup or every minute.
 
 ![png2gif](https://github.com/atsuyaide/taskick/raw/main/png_to_pdf.gif)
 
-These tasks are controlled by `main.yaml` and managed by TaskicThese tasks are controlled by Taskick, and the behavior of the tasks is controlled by `main.yaml` and `welcome.yaml`.
+These tasks are controlled by `main.yaml` and managed by Taskick. These tasks are controlled by Taskick, and the behavior of the tasks is controlled by `main.yaml` and `welcome.yaml`.
