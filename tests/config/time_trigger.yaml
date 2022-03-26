@@ -1,0 +1,19 @@
+example_time_trigger_task_1:
+  status: 1
+  commands:
+    - echo sample message
+  execution:
+    immediate: true
+    event_type: time
+    detail:
+      when: "*/2 * * * *"
+
+example_time_trigger_task_2:
+  status: 1
+  commands:
+    - echo sample message
+  execution:
+    immediate: false
+    event_type: time
+    detail:
+      when: "*/2 * * * *"

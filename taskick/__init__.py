@@ -170,7 +170,7 @@ def simplify_crontab_format(crontab_format: str) -> List[str]:
                 s, e = map(int, unit_str.split("-"))
                 e += 1
             else:
-                raise ValueError
+                raise ValueError("Invalid format.")
 
             cv_list.extend(list(map(str, list(range(s, e, int(interval))))))
         merged_cron_str_list.append(cv_list)
@@ -334,7 +334,8 @@ class TaskRunner:
         """_summary_"""
         self.scheduler = Scheduler()
         self.observer = Observer()
-        self.task_list_needs_execute_immediately = []
+        self.task_list_needs_execute_immediately = {}
+        self.registered_tasks = {}
 
     def register(self, job_config: dict):
         """_summary_
@@ -348,6 +349,7 @@ class TaskRunner:
         Returns:
             _type_: _description_
         """
+        print(job_config)
         for task_name, task_detail in job_config.items():
             logger.debug(task_detail)
             if task_detail["status"] != 1:
@@ -380,17 +382,23 @@ class TaskRunner:
                 observe_detail = execution_detail["detail"]
                 self.observer = update_observer(self.observer, observe_detail, task.execute_by_observer)
             else:
-                raise ValueError("'{:}' is not defined.".format(execution_detail["event_type"]))
+                raise ValueError("'{:}' does not defined.".format(execution_detail["event_type"]))
 
             if execution_detail["immediate"]:
                 logger.info("Immediate execution option is selected.")
-                self.task_list_needs_execute_immediately.append(task)
+                self.task_list_needs_execute_immediately[task_name] = task
+
+            if task_name in self.registered_tasks.keys():
+                raise ValueError(f"{task_name} is already exists.")
+
+            self.registered_tasks[task_name] = task
+            logger.info(f"Registed: {task_name}")
 
         return self
 
     def run(self) -> None:
         """_summary_"""
-        for task in self.task_list_needs_execute_immediately:
+        for task in self.task_list_needs_execute_immediately.values():
             task.execute()
 
         self.observer.start()
@@ -409,3 +417,12 @@ class TaskRunner:
         finally:
             self.observer.stop()
             self.observer.join()
+
+    def __str__(self) -> str:
+        pass
+
+    def __repr__(self) -> str:
+        pass
+
+    def __len__(self) -> int:
+        return len(self.registered_tasks)

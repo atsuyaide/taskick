@@ -53,11 +53,11 @@ Go to the cloned directory and start Taskick.
 ```shell
 $ cd taskick-example
 $ pip install -r requirements.txt
-$ python -m taskick -f welcome.yaml jobconf.yaml -vv
+$ python -m taskick -f welcome.yaml main.yaml -vv
 INFO:taskick:Loading: welcome.yaml
 INFO:taskick:Registering: Welcome_taskick
 INFO:taskick:Immediate execution option is selected.
-INFO:taskick:Loading: jobconf.yaml
+INFO:taskick:Loading: main.yaml
 INFO:taskick:Registering: remove_input_folder
 INFO:taskick:Immediate execution option is selected.
 INFO:taskick:Registering: png2pdf
@@ -72,4 +72,4 @@ Files in the input folder are automatically deleted at startup or every minute.
 
 ![png2gif](https://github.com/atsuyaide/taskick/raw/main/png_to_pdf.gif)
 
-These tasks are controlled by `jobconf.yaml` and managed by Taskick.
+These tasks are controlled by `main.yaml` and managed by TaskicThese tasks are controlled by Taskick, and the behavior of the tasks is controlled by `main.yaml` and `welcome.yaml`.

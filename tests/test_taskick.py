@@ -1,9 +1,12 @@
+import logging
 import os
 
 import pytest
 import schedule
+import yaml
 
 from taskick import (
+    TaskRunner,
     __version__,
     get_execute_command_list,
     set_a_task_to_scheduler,
@@ -11,7 +14,7 @@ from taskick import (
     update_scheduler,
 )
 
-DIR_NAME = os.path.dirname(__file__)
+logger = logging.getLogger("taskick")
 
 
 def test_version():
@@ -246,3 +249,46 @@ def test_get_execute_command_list(commands, options, expected_commands):
 #     assert isinstance(observer, PollingObserver)
 #     for task in task_list_needs_execute_immediately:
 #         assert isinstance(task, CommandExecuter)
+
+
+@pytest.mark.parametrize(
+    ("file_name", "expected_task_num"),
+    [
+        ("config/vanilla.yaml", 1),
+        ("config/time_trigger.yaml", 2),
+        ("config/file_trigger.yaml", 3),
+    ],
+)
+def test_register(file_name, expected_task_num):
+    test_dir = os.path.dirname(__file__)
+    with open(os.path.join(test_dir, file_name), "r", encoding="utf-8") as f:
+        config = yaml.safe_load(f)
+
+    TR = TaskRunner()
+    TR.register(config)
+    assert len(TR) == expected_task_num
+
+
+@pytest.mark.parametrize(
+    ("task_name", "expected_exception"),
+    [
+        ("invalid_event_type", ValueError),
+        ("invalid_crontab_format", ValueError),
+        ("invalid_event_handler", AttributeError),
+        ("invalid_event_type_of_watchdog", AttributeError),
+    ],
+)
+def test_invalid_registration(task_name, expected_exception):
+    test_dir = os.path.dirname(__file__)
+    with open(os.path.join(test_dir, "config/invalid.yaml"), "r", encoding="utf-8") as f:
+        config = yaml.safe_load(f)
+
+    invalid_config = {}
+    invalid_config[task_name] = config[task_name]
+    TR = TaskRunner()
+    with pytest.raises(expected_exception):
+        TR.register(invalid_config)
+
+
+def test_run():
+    pass

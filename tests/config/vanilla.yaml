@@ -1,0 +1,22 @@
+example_task_1:
+  status: 1
+  commands:
+    - echo
+    - $(date) Hello Taskick! Working in $HOME
+  execution:
+    event_type: null
+
+example_task_1:
+  status: 1
+  commands:
+    - echo
+    - $(date) Hello Taskick! Working in $HOME
+  execution:
+    event_type: null
+
+example_task_2:
+  status: 0
+  commands:
+    - echo $(date) Hello Taskick! Working in $HOME
+  execution:
+    event_type: null
