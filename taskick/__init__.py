@@ -330,14 +330,19 @@ class CommandExecuter:
         return subprocess.Popen(command, shell=self.shell)
 
 
-class SchedulerThread(threading.Thread):
-    def __init__(self, scheduler: Scheduler, *pargs, **kwargs):
-        super().__init__(daemon=True, name="taskick_scheduler", *pargs, **kwargs)
-        self.scheduler = scheduler
+class BaseThread(threading.Thread):
+    def __init__(self, *pargs, **kwargs):
+        super().__init__(daemon=True, *pargs, **kwargs)
+
+
+class ThreadingScheduler(Scheduler, BaseThread):
+    def __init__(self) -> None:
+        Scheduler.__init__(self)
+        BaseThread.__init__(self)
 
     def run(self) -> None:
         while True:
-            self.scheduler.run_pending()
+            self.run_pending()
             time.sleep(1)
 
 
@@ -346,7 +351,7 @@ class TaskRunner:
 
     def __init__(self) -> None:
         """_summary_"""
-        self.scheduler = Scheduler()
+        self.scheduler = ThreadingScheduler()
         self.observer = Observer()
         self.startup_execution_tasks = {}
         self.registered_tasks = {}
@@ -422,24 +427,14 @@ class TaskRunner:
                 self._await_running_task(task_name)
             self.executing_tasks[task_name] = task.execute()
 
-        threading_scheduler = SchedulerThread(self.scheduler)
-
         self.observer.start()
-        threading_scheduler.start()
+        self.scheduler.start()
 
-        try:
-            while True:
-                time.sleep(1)
-        except KeyboardInterrupt:
-            logger.debug("Ctrl-C detected.")
-        except Exception as e:
-            import traceback
+    def stop(self) -> None:
+        self.observer.stop()
 
-            logger.error(e)
-            traceback.print_exc()
-        finally:
-            self.observer.stop()
-            self.observer.join()
+    def join(self) -> None:
+        self.observer.join()
 
     def __str__(self) -> str:
         pass

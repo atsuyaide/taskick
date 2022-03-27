@@ -3,6 +3,7 @@ import logging
 import logging.config
 import os
 import sys
+import time
 from argparse import ArgumentParser
 
 import yaml
@@ -76,6 +77,20 @@ def main() -> None:
         TR.register(job_config)
 
     TR.run()
+
+    try:
+        while True:
+            time.sleep(1)
+    except KeyboardInterrupt:
+        logger.debug("Ctrl-C detected.")
+    except Exception as e:
+        import traceback
+
+        logger.error(e)
+        traceback.print_exc(e)
+    finally:
+        TR.stop()
+        TR.join()
 
 
 if __name__ == "__main__":
