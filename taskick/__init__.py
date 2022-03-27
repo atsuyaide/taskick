@@ -6,6 +6,7 @@ import itertools
 import logging
 import re
 import subprocess
+import threading
 import time
 from typing import Callable, List
 
@@ -329,6 +330,17 @@ class CommandExecuter:
         return subprocess.Popen(command, shell=self.shell)
 
 
+class SchedulerThread(threading.Thread):
+    def __init__(self, scheduler: Scheduler, *pargs, **kwargs):
+        super().__init__(daemon=True, name="taskick_scheduler", *pargs, **kwargs)
+        self.scheduler = scheduler
+
+    def run(self) -> None:
+        while True:
+            self.scheduler.run_pending()
+            time.sleep(1)
+
+
 class TaskRunner:
     """_summary_"""
 
@@ -410,11 +422,13 @@ class TaskRunner:
                 self._await_running_task(task_name)
             self.executing_tasks[task_name] = task.execute()
 
+        threading_scheduler = SchedulerThread(self.scheduler)
+
         self.observer.start()
+        threading_scheduler.start()
 
         try:
             while True:
-                self.scheduler.run_pending()
                 time.sleep(1)
         except KeyboardInterrupt:
             logger.debug("Ctrl-C detected.")
