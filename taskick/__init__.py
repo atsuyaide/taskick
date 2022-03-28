@@ -339,11 +339,15 @@ class ThreadingScheduler(Scheduler, BaseThread):
     def __init__(self) -> None:
         Scheduler.__init__(self)
         BaseThread.__init__(self)
+        self._is_active = True
 
     def run(self) -> None:
-        while True:
+        while self._is_active:
             self.run_pending()
             time.sleep(1)
+
+    def stop(self) -> None:
+        self._is_active = False
 
 
 class TaskRunner:
@@ -353,9 +357,9 @@ class TaskRunner:
         """_summary_"""
         self.scheduler = ThreadingScheduler()
         self.observer = Observer()
-        self.startup_execution_tasks = {}
-        self.registered_tasks = {}
-        self.await_tasks = {}  # {"A": "B"} -> "A" waits for "B" to finish.
+        self._startup_execution_tasks = {}
+        self._registered_tasks = {}
+        self._await_tasks = {}  # {"A": "B"} -> "A" waits for "B" to finish.
 
     def register(self, job_config: dict):
         """_summary_
@@ -400,41 +404,43 @@ class TaskRunner:
 
             if execution_detail["startup"]:
                 logger.info("Startup execution option is selected.")
-                if "await_task" in execution_detail.keys():
-                    self.await_tasks[task_name] = execution_detail["await_task"]
-                self.startup_execution_tasks[task_name] = task
+                if "_await_task" in execution_detail.keys():
+                    self._await_tasks[task_name] = execution_detail["_await_task"]
+                self._startup_execution_tasks[task_name] = task
 
-            if task_name in self.registered_tasks.keys():
+            if task_name in self._registered_tasks.keys():
                 raise ValueError(f"{task_name} is already exists.")
 
-            self.registered_tasks[task_name] = task
+            self._registered_tasks[task_name] = task
             logger.info(f"Registered: {task_name}")
 
         return self
 
     def _await_running_task(self, task_name) -> None:
-        for await_task_name in self.await_tasks[task_name]:
-            if await_task_name not in self.executing_tasks.keys():
-                raise ValueError(f'"{await_task_name}" is not running.')
-            logger.info(f'"{task_name}" is waiting for "{await_task_name}" to finish.')
-            self.executing_tasks[await_task_name].wait()
+        for _await_task_name in self._await_tasks[task_name]:
+            if _await_task_name not in self.running_tasks.keys():
+                raise ValueError(f'"{_await_task_name}" is not running.')
+            logger.info(f'"{task_name}" is waiting for "{_await_task_name}" to finish.')
+            self.running_tasks[_await_task_name].wait()
 
     def run(self) -> None:
         """_summary_"""
-        self.executing_tasks = {}
-        for task_name, task in self.startup_execution_tasks.items():
-            if task_name in self.await_tasks.keys():
+        self.running_tasks = {}
+        for task_name, task in self._startup_execution_tasks.items():
+            if task_name in self._await_tasks.keys():
                 self._await_running_task(task_name)
-            self.executing_tasks[task_name] = task.execute()
+            self.running_tasks[task_name] = task.execute()
 
         self.observer.start()
         self.scheduler.start()
 
     def stop(self) -> None:
         self.observer.stop()
+        self.scheduler.stop()
 
     def join(self) -> None:
         self.observer.join()
+        self.scheduler.join()
 
     def __str__(self) -> str:
         pass
@@ -444,16 +450,16 @@ class TaskRunner:
 
     @property
     def task_count(self) -> int:
-        return len(self.registered_tasks)
+        return len(self._registered_tasks)
 
     @property
     def startup_task_count(self) -> int:
-        return len(self.startup_execution_tasks)
+        return len(self._startup_execution_tasks)
 
     @property
     def tasks(self) -> dict:
-        return self.registered_tasks
+        return self._registered_tasks
 
     @property
     def startup_tasks(self) -> dict:
-        return self.startup_execution_tasks
+        return self._startup_execution_tasks
