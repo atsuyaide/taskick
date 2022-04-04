@@ -440,12 +440,16 @@ class TaskRunner:
             self._running_tasks[task_name] = task.execute()
 
     def run(self) -> None:
-        """_summary_"""
+        """
+        Executes registered tasks.
+        Scheduled/Observed tasks will not be executed until the startup task is complete.
+        """
         self._run_startup_tasks()
         self._observer.start()
         self._scheduler.start()
 
     def stop(self) -> None:
+        """Stop execution of registered tasks other than the startup task."""
         self._observer.stop()
         self._scheduler.stop()
 
