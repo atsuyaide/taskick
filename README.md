@@ -23,7 +23,7 @@ And,
 ```shell
 $ pip install taskick
 $ python -m taskick
-Taskick 0.1.5a5
+Taskick 0.1.5
 usage: python -m taskick [-h] [--verbose] [--version] [--file FILE [FILE ...]]
                          [--log-config LOG_CONFIG]
 
@@ -39,7 +39,7 @@ optional arguments:
   --log-config LOG_CONFIG, -l LOG_CONFIG
                         specify a logging configuration file
 $ python -m taskick -V
-Taskick 0.1.5a5
+Taskick 0.1.5
 ```
 
 ## Toy Example
@@ -79,7 +79,7 @@ INFO:taskick:Executing: remove_files_in_input_folder
 
 You can now launch an application that converts PNG images to PDF.
 
-When a PNG image is saved in the `input` folder, a converted PDF file is `output` in the output folder.
+When a PNG image is saved in the `input` folder, a converted PDF file is output in the `output` folder.
 Files in the input folder are automatically deleted at startup or every minute.
 
 
