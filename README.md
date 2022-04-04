@@ -1,16 +1,22 @@
 # Taskick
 
-Taskick is an event-driven Python library that automatically executes scripts or any commands.
-It not only automates tedious routine tasks and operations, but also makes it easy to develop [applications](#toy-example).
+[![pypi-taskick](https://img.shields.io/pypi/v/taskick)](https://pypi.org/project/taskick/)
 
-Users can concentrate on developing scripts to run, and simply create a configuration file (YAML) to automatically execute scripts triggered by any date, time, or event.
+Taskick is an event-driven Python library that automatically executes scripts or any commands.
+It not only automates tedious routine tasks and operations, but also makes it easy to develop [applications](https://github.com/atsuyaide/taskick#toy-example).
+
+[日本語版 README](https://github.com/atsuyaide/taskick/blob/main/README-ja.md)
 
 The main features of Taskick are as follows
 
+- Automatically execute commands and scripts.
 - Script execution timing can be managed in a configuration file (YAML).
-- Can specify datetime and directory/file operations as task triggers.
+- You can specify datetime and directory/file operations as task triggers.
+
+And,
+
 - Execution schedules can be specified in Crontab format.
-- [Watchdog](https://github.com/gorakhargosh/watchdog) is used to detect directory and file operations. It is also possible to specify any [events API](https://python-watchdog.readthedocs.io/en/stable/api.html#module-watchdog.events) on the configuration file.
+- [Watchdog](https://github.com/gorakhargosh/watchdog) is used to detect directory and file operations.  Any [events API](https://python-watchdog.readthedocs.io/en/stable/api.html#module-watchdog.events) provided by Watchdog can be specified in the configuration file.
 
 ## Installation
 
@@ -18,8 +24,8 @@ The main features of Taskick are as follows
 $ pip install taskick
 $ python -m taskick
 Taskick 0.1.5a4
-usage: __main__.py [-h] [--verbose] [--version] [--file FILE [FILE ...]]
-                   [--log_config LOG_CONFIG]
+usage: python -m taskick [-h] [--verbose] [--version] [--file FILE [FILE ...]]
+                         [--log-config LOG_CONFIG]
 
 optional arguments:
   -h, --help            show this help message and exit
@@ -28,9 +34,10 @@ optional arguments:
                         debug
   --version, -V         display this application version and exit
   --file FILE [FILE ...], -f FILE [FILE ...]
-                        select task configuration files (YAML)
+                        specify configuration files (YAML) for the task to
+                        be executed
   --log-config LOG_CONFIG, -l LOG_CONFIG
-                        select a logging configuration file (YAML or other)
+                        specify a logging configuration file
 $ python -m taskick -V
 Taskick 0.1.5a4
 ```
@@ -38,9 +45,8 @@ Taskick 0.1.5a4
 ## Toy Example
 
 Here is a toy-eample that converts a PNG image to PDF.
-In this sample, Taskick starts a script when it detects that a PNG image has been saved to a specific folder.
+In this sample, the conversion script is automatically invoked when it detects that a PNG image has been saved to a specific folder.
 The script converts the PNG to PDF and saves it in another folder.
-For more information, please see the [project page](https://github.com/atsuyaide/taskick-example).
 
 First, clone [taskick-example](https://github.com/atsuyaide/taskick-example).
 
@@ -48,7 +54,7 @@ First, clone [taskick-example](https://github.com/atsuyaide/taskick-example).
 git clone https://github.com/atsuyaide/taskick-example.git
 ```
 
-Go to the cloned directory and start Taskick.
+Then, execute the following command.
 
 ```shell
 $ cd taskick-example
@@ -71,10 +77,13 @@ waiting 5 seconds...
 INFO:taskick:Executing: remove_files_in_input_folder
 ```
 
-When a PNG image is saved in the input folder, a converted PDF file is output in the output folder.
+You can now launch an application that converts PNG images to PDF.
+
+When a PNG image is saved in the `input` folder, a converted PDF file is `output` in the output folder.
 Files in the input folder are automatically deleted at startup or every minute.
 
 
 ![png2gif](https://github.com/atsuyaide/taskick/raw/main/png_to_pdf.gif)
 
-These tasks are controlled by `main.yaml` and managed by Taskick. These tasks are controlled by Taskick, and the behavior of the tasks is controlled by `main.yaml` and `welcome.yaml`.
+This application consist of `welcome.yaml` and `main.yaml`, and Taskick manages the execution of these tasks.
+For more information, please see the [project page](https://github.com/atsuyaide/taskick-example).
