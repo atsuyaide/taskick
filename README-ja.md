@@ -42,9 +42,8 @@ Taskick 0.1.5a4
 ## Toy Example
 
 PNG画像をPDFに変換するtoy-exampleを紹介します.
-このサンプルでは, PNG画像が特定のフォルダに保存されたことを検出すると, Taskickがスクリプトを起動します.
-スクリプトは, PNGをPDFに変換し, 別のフォルダに保存します.
-詳しくは, [プロジェクトページ](https://github.com/atsuyaide/taskick-example)をご覧ください.
+このサンプルでは, PNG画像が特定のフォルダに保存されたことを検出すると, 変換スクリプトを自動的に起動します.
+スクリプトはPNGをPDFに変換し, 出力先のフォルダに保存します.
 
 まず[taskick-example](https://github.com/atsuyaide/taskick-example)のコードをクローンします.
 
@@ -77,9 +76,10 @@ INFO:taskick:Executing: remove_files_in_input_folder
 
 これでPNG画像をPDFに変換するアプリケーションを起動できました.
 
-入力フォルダにPNG画像を保存すると出力フォルダに変換後のPDFファイルが出力されます.
+`input`フォルダにPNG画像を保存すると`output`フォルダに変換後のPDFファイルが出力されます.
 また入力フォルダー内のファイルは, 起動時または1分ごとに自動的に削除されます.
 
 ![png2gif](https://github.com/atsuyaide/taskick/raw/main/png_to_pdf.gif)
 
 このアプリケーションは`welcome.yaml`と`main.yaml`で構成され, Taskickがそれらタスクの実行を管理しています.
+詳しくは, [プロジェクトページ](https://github.com/atsuyaide/taskick-example)をご覧ください.

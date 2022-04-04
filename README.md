@@ -42,9 +42,8 @@ Taskick 0.1.5a4
 ## Toy Example
 
 Here is a toy-eample that converts a PNG image to PDF.
-In this sample, Taskick starts a script when it detects that a PNG image has been saved to a specific folder.
+In this sample, the conversion script is automatically invoked when it detects that a PNG image has been saved to a specific folder.
 The script converts the PNG to PDF and saves it in another folder.
-For more information, please see the [project page](https://github.com/atsuyaide/taskick-example).
 
 First, clone [taskick-example](https://github.com/atsuyaide/taskick-example).
 
@@ -77,10 +76,11 @@ INFO:taskick:Executing: remove_files_in_input_folder
 
 You can now launch an application that converts PNG images to PDF.
 
-When a PNG image is saved in the input folder, a converted PDF file is output in the output folder.
+When a PNG image is saved in the `input` folder, a converted PDF file is `output` in the output folder.
 Files in the input folder are automatically deleted at startup or every minute.
 
 
 ![png2gif](https://github.com/atsuyaide/taskick/raw/main/png_to_pdf.gif)
 
 This application consist of `welcome.yaml` and `main.yaml`, and Taskick manages the execution of these tasks.
+For more information, please see the [project page](https://github.com/atsuyaide/taskick-example).
