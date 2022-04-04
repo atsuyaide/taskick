@@ -5,6 +5,7 @@ import os
 import sys
 import time
 from argparse import ArgumentParser
+from typing import List
 
 import yaml
 from taskick import TaskRunner, __version__
@@ -12,10 +13,90 @@ from taskick import TaskRunner, __version__
 logger = logging.getLogger("taskick")
 
 
-def main() -> None:
-    """_summary_"""
+class NoRegisteredTaskException(Exception):
+    pass
 
-    parser = ArgumentParser()
+
+class Taskicker:
+    def __init__(self, parser: ArgumentParser) -> None:
+        self._parser = parser
+        self._setup_logger()
+        self._TR = TaskRunner()
+
+    def _setup_logger(self) -> None:
+        args = self._parser.parse_args()
+
+        # Default logging level: WARNING(30), -vv -> INFO(20)
+        level = 40 - 10 * args.verbose if args.verbose > 0 else 30
+        logging.basicConfig(level=level)
+
+        if args.log_config is not None:
+            file_extention = os.path.splitext(args.log_config)[-1]
+            if file_extention == ".yaml":
+                with open(args.log_config, "r") as f:
+                    config = yaml.safe_load(f.read())
+                    logging.config.dictConfig(config)
+            else:  # *.(conf|ini|...)
+                logging.config.fileConfig(args.log_config)
+
+    def _show_version(self) -> None:
+        print(f"Taskick {__version__}")
+
+    def _show_help(self) -> None:
+        self._show_version()
+        self._parser.print_help()
+
+    def _register(self, config_file: List[str]) -> None:
+        extended_config_file_list = []
+        for file in config_file:
+            # Extract only files matching the pattern
+            extended_config_file_list.extend(
+                [x for x in glob.glob(file) if os.path.isfile(x)]
+            )
+
+        for file_name in extended_config_file_list:
+            logger.info(f"Loading: {file_name}")
+            with open(file_name, "r", encoding="utf-8") as f:
+                job_config = yaml.safe_load(f)
+            self._TR.register(job_config)
+
+    def run(self) -> None:
+        args = self._parser.parse_args()
+        if args.version:
+            self._show_version()
+            return 0
+
+        if args.file is None:
+            self._show_help()
+            return 0
+
+        try:
+            self._register(args.file)
+            self._TR.run()
+
+            if len(self._TR.scheduling_tasks) + len(self._TR.observing_tasks) == 0:
+                logger.info("Scheduling/Observing task does not registered.")
+                self._TR.join_startup_task()
+                raise NoRegisteredTaskException
+
+            while True:
+                time.sleep(1)
+        except NoRegisteredTaskException:
+            pass
+        except KeyboardInterrupt:
+            logger.debug("Ctrl-C detected.")
+        except Exception as e:
+            import traceback
+
+            logger.error(e)
+            traceback.print_exc(e)
+        finally:
+            self._TR.stop()
+            self._TR.join()
+
+
+def main() -> None:
+    parser = ArgumentParser(prog="python -m taskick")
     parser.add_argument(
         "--verbose",
         "-v",
@@ -51,71 +132,9 @@ def main() -> None:
         default=None,
         help="select a logging configuration file (YAML or other)",
     )
-    args = parser.parse_args()
 
-    # Default logging level: WARNING(30), -vv -> INFO(20)
-    args.verbose = 40 - 10 * args.verbose if args.verbose > 0 else 30
-    logging.basicConfig(level=args.verbose)
-
-    if args.log_config is not None:
-        file_extention = os.path.splitext(args.log_config)[-1]
-        if file_extention == ".yaml":
-            with open(args.log_config, "r") as f:
-                config = yaml.safe_load(f.read())
-                logging.config.dictConfig(config)
-        else:  # *.(conf|ini|...)
-            logging.config.fileConfig(args.log_config)
-
-    if args.version:
-        print(f"Taskick {__version__}")
-        return 0
-
-    if args.file is None:
-        print(f"Taskick {__version__}")
-        parser.print_help()
-        return 0
-
-    job_configuration_file_names = []
-    for file in args.file:
-        # Extracts only file paths
-        job_configuration_file_names.extend(
-            [x for x in glob.glob(file) if os.path.isfile(x)]
-        )
-
-    if len(job_configuration_file_names) == 0:
-        print("Check configuration file name, path or pattern.")
-        sys.exit(0)
-
-    TR = TaskRunner()
-
-    for file_name in job_configuration_file_names:
-        logger.info(f"Loading: {file_name}")
-        with open(file_name, "r", encoding="utf-8") as f:
-            job_config = yaml.safe_load(f)
-        TR.register(job_config)
-
-    try:
-        TR.run()
-
-        if len(TR.scheduling_tasks) == 0 and len(TR.observing_tasks) == 0:
-            logger.info("Scheduling/Observing task does not registered.")
-            TR.join_startup_task()
-            TR.stop()
-            TR.join()
-            return 0
-
-        while True:
-            time.sleep(1)
-    except KeyboardInterrupt:
-        logger.debug("Ctrl-C detected.")
-    except Exception as e:
-        import traceback
-
-        logger.error(e)
-        traceback.print_exc(e)
-    finally:
-        TR.stop()
-        TR.join()
+    taskicker = Taskicker(parser)
+    taskicker.run()
 
 
 if __name__ == "__main__":

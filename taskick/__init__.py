@@ -140,18 +140,6 @@ def set_a_task_to_scheduler(
 
 
 def simplify_crontab_format(crontab_format: str) -> List[str]:
-    """_summary_
-
-    Args:
-        crontab_format (str): _description_
-
-    Raises:
-        ValueError: _description_
-        ValueError: _description_
-
-    Returns:
-        List[str]: _description_
-    """
     cron_values = crontab_format.split()
 
     cron_values = [x.split(",") for x in cron_values]
@@ -191,16 +179,6 @@ def simplify_crontab_format(crontab_format: str) -> List[str]:
 def update_scheduler(
     scheduler: Scheduler, crontab_format: str, task: Callable, *args, **kwargs
 ) -> Scheduler:
-    """_summary_
-
-    Args:
-        scheduler (Scheduler): _description_
-        crontab_format (str): _description_
-        task (Callable): Tasks to be registered. If you want to pass arguments, use *args and **kwargs.
-
-    Returns:
-        Scheduler: Updated Scheduler.
-    """
     crontab_format_list = simplify_crontab_format(crontab_format)
 
     for crontab_format in crontab_format_list:
@@ -214,17 +192,6 @@ def update_scheduler(
 def update_observer(
     observer: Observer, observe_detail: dict, task: Callable
 ) -> Observer:
-    """_summary_
-
-    Args:
-        observer (Observer): _description_
-        observe_detail (dict): _description_
-        task (Callable): Tasks to be registered.
-
-    Returns:
-        Observer: Updated Observer.
-    """
-
     handler_detail = observe_detail["handler"]
     event_type_detail = observe_detail["when"]
 
@@ -249,15 +216,6 @@ def update_observer(
 
 
 def get_execute_command_list(commands: list, options: dict) -> List[str]:
-    """_summary_
-
-    Args:
-        commands (list): _description_
-        options (dict): _description_
-
-    Returns:
-        List[str]: _description_
-    """
     if options is None:
         return commands
 
@@ -270,33 +228,15 @@ def get_execute_command_list(commands: list, options: dict) -> List[str]:
 
 
 class CommandExecuter:
-    """_summary_"""
-
     def __init__(
         self, task_name: str, command: str, propagate: bool = False, shell: bool = False
     ) -> None:
-        """_summary_
-
-        Args:
-            task_name (str): _description_
-            command (str): _description_
-            propagate (bool, optional): _description_. Defaults to False.
-            shell (bool, optional): _description_. Defaults to False.
-        """
         self._task_name = task_name
         self._comand = command
         self._propagate = propagate
         self._shell = shell
 
     def _get_event_options(self, event) -> dict:
-        """_summary_
-
-        Args:
-            event (_type_): _description_
-
-        Returns:
-            dict: _description_
-        """
         if isinstance(event, FileMovedEvent):
             event_keys = ["--event_type", "--src_path", "--dest_path", "--is_directory"]
             event_values = event.key
@@ -314,11 +254,6 @@ class CommandExecuter:
         return event_options
 
     def execute_by_observer(self, event) -> None:
-        """_summary_
-
-        Args:
-            event (_type_): _description_
-        """
         logger.debug(event)
         command = self._comand
         if self._propagate:
@@ -330,20 +265,14 @@ class CommandExecuter:
         self.execute(command)
 
     def execute_by_scheduler(self) -> None:
-        """_summary_"""
         self.execute()
 
     def execute(self, command: str = None) -> None:
-        """_summary_
-
-        Args:
-            command (str, optional): _description_. Defaults to None.
-        """
         if command is None:
             command = " ".join(self._comand)
 
         logger.info(f"Executing: {self._task_name}")
-        logger.debug(f"Detail: {command}")
+        logger.debug(f"Executing detail: {command}")
         return subprocess.Popen(command, shell=self._shell)
 
     @property
@@ -372,10 +301,7 @@ class ThreadingScheduler(Scheduler, BaseThread):
 
 
 class TaskRunner:
-    """_summary_"""
-
     def __init__(self) -> None:
-        """_summary_"""
         self._scheduler = ThreadingScheduler()
         self._observer = Observer()
         self._startup_execution_tasks = {}
@@ -385,17 +311,6 @@ class TaskRunner:
         self._await_tasks = {}  # {"A": "B"} -> "A" waits for "B" to finish.
 
     def register(self, job_config: dict):
-        """_summary_
-
-        Args:
-            job_config (dict): _description_
-
-        Raises:
-            ValueError: _description_
-
-        Returns:
-            _type_: _description_
-        """
         for task_name, task_detail in job_config.items():
             logger.debug(task_detail)
             if task_detail["status"] != 1:
