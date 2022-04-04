@@ -304,7 +304,9 @@ class TaskRunner:
     def __init__(self) -> None:
         self._scheduler = ThreadingScheduler()
         self._observer = Observer()
+
         self._startup_execution_tasks = {}
+        self._running_startup_tasks = {}
         self._registered_tasks = {}
         self._scheduling_tasks = {}
         self._observing_tasks = {}
@@ -376,7 +378,6 @@ class TaskRunner:
             self._running_startup_tasks[await_task_name].wait()
 
     def _run_startup_task(self):
-        self._running_startup_tasks = {}
         for task_name, task in self._startup_execution_tasks.items():
             if task_name in self._await_tasks.keys():
                 self._await_running_task(task_name)

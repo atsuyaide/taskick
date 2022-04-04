@@ -80,7 +80,7 @@ INFO:taskick:Executing: remove_files_in_input_folder
 これでPNG画像をPDFに変換するアプリケーションを起動できました.
 
 `input`フォルダにPNG画像を保存すると`output`フォルダに変換後のPDFファイルが出力されます.
-また入力フォルダー内のファイルは, 起動時または1分ごとに自動的に削除されます.
+また`input`フォルダー内のファイルは, 起動時または1分ごとに自動的に削除されます.
 
 ![png2gif](https://github.com/atsuyaide/taskick/raw/main/png_to_pdf.gif)
 

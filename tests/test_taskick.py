@@ -264,7 +264,7 @@ def test_get_execute_command_list(commands, options, expected_commands):
         ("config/vanilla.yaml", 1, 1, 0, 0),
         ("config/time_trigger.yaml", 2, 1, 2, 0),
         ("config/file_trigger.yaml", 3, 0, 0, 3),
-        ("config/await.yaml", 2, 2, 0, 0),
+        ("config/await.yaml", 3, 3, 0, 0),
     ],
 )
 def test_register(

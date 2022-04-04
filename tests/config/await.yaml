@@ -1,4 +1,4 @@
-awaited_task:
+task:
   status: 1
   commands:
     - "echo sleeping 2 seconds"
@@ -7,11 +7,22 @@ awaited_task:
   execution:
     event_type: null
 
-waitting_task:
+awaiting_task:
   status: 1
   commands:
-    - 'echo Was waiting for "awaited_task" to finish.'
+    - 'echo Was waiting for "task" to finish. sleeping 3 seconds.'
+    - "&&"
+    - "sleep 3"
   execution:
     event_type: null
     await_task:
-      - "awaited_task"
+      - "task"
+
+awaiting_task2:
+  status: 1
+  commands:
+    - 'echo Was waiting for "awaiting_task" to finish.'
+  execution:
+    event_type: null
+    await_task:
+      - "awaiting_task"
