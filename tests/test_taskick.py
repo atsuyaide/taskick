@@ -4,7 +4,6 @@ import os
 import pytest
 import schedule
 import yaml
-
 from taskick import (
     TaskRunner,
     __version__,
@@ -218,7 +217,9 @@ def test_update_scheduler(crontab_format, expected_job_list):
         ("*a * * * *", ValueError),
     ],
 )
-def test_set_a_task_to_scheduler_given_invalid_input(crontab_format, expected_exception):
+def test_set_a_task_to_scheduler_given_invalid_input(
+    crontab_format, expected_exception
+):
     scheduler = schedule.Scheduler()
     with pytest.raises(expected_exception):
         scheduler = set_a_task_to_scheduler(scheduler, crontab_format, print)
@@ -252,22 +253,54 @@ def test_get_execute_command_list(commands, options, expected_commands):
 
 
 @pytest.mark.parametrize(
-    ("file_name", "expected_task_count", "expected_startup_task_count"),
+    (
+        "file_name",
+        "expected_task_count",
+        "expected_startup_task_count",
+        "expected_scheduling_task_count",
+        "expected_observing_task_count",
+    ),
     [
-        ("config/vanilla.yaml", 1, 1),
-        ("config/time_trigger.yaml", 2, 1),
-        ("config/file_trigger.yaml", 3, 0),
+        ("config/vanilla.yaml", 1, 1, 0, 0),
+        ("config/time_trigger.yaml", 2, 1, 2, 0),
+        ("config/file_trigger.yaml", 3, 0, 0, 3),
+        ("config/await.yaml", 2, 2, 0, 0),
     ],
 )
-def test_register(file_name, expected_task_count, expected_startup_task_count):
+def test_register(
+    file_name,
+    expected_task_count,
+    expected_startup_task_count,
+    expected_scheduling_task_count,
+    expected_observing_task_count,
+):
     test_dir = os.path.dirname(__file__)
     with open(os.path.join(test_dir, file_name), "r", encoding="utf-8") as f:
         config = yaml.safe_load(f)
 
     TR = TaskRunner()
     TR.register(config)
-    assert TR.task_count == expected_task_count
-    assert TR.startup_task_count == expected_startup_task_count
+    assert len(TR.tasks) == expected_task_count
+    assert len(TR.startup_tasks) == expected_startup_task_count
+    assert len(TR.scheduling_tasks) == expected_scheduling_task_count
+    assert len(TR.observing_tasks) == expected_observing_task_count
+
+
+# @pytest.mark.parametrize(
+#     ("file_name", "expected_schedulering_task_count", "expected_observing_task_count"),
+#     [
+#         ("config/await.yaml", 1, 1),
+#     ],
+# )
+# def test_awaiting_task(file_name, expected_task_count, expected_startup_task_count):
+#     test_dir = os.path.dirname(__file__)
+#     with open(os.path.join(test_dir, file_name), "r", encoding="utf-8") as f:
+#         config = yaml.safe_load(f)
+#
+#     TR = TaskRunner()
+#     TR.register(config)
+#     assert len(TR.tasks) == expected_task_count
+#     assert len(TR.startup_tasks) == expected_startup_task_count
 
 
 @pytest.mark.parametrize(
@@ -281,7 +314,9 @@ def test_register(file_name, expected_task_count, expected_startup_task_count):
 )
 def test_invalid_registration(task_name, expected_exception):
     test_dir = os.path.dirname(__file__)
-    with open(os.path.join(test_dir, "config/invalid.yaml"), "r", encoding="utf-8") as f:
+    with open(
+        os.path.join(test_dir, "config/invalid.yaml"), "r", encoding="utf-8"
+    ) as f:
         config = yaml.safe_load(f)
 
     invalid_config = {task_name: config[task_name]}

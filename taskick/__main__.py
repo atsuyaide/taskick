@@ -7,7 +7,6 @@ import time
 from argparse import ArgumentParser
 
 import yaml
-
 from taskick import TaskRunner, __version__
 
 logger = logging.getLogger("taskick")
@@ -21,17 +20,34 @@ def main() -> None:
         "--verbose",
         "-v",
         action="count",
+        dest="verbose",
         default=0,
-        help="increase the verbosity of messages: '-v' for normal output, '-vv' for more verbose output and '-vvv' for debug",
+        help=(
+            "increase the verbosity of messages: '-v' for normal output, '-vv' for more"
+            " verbose output and '-vvv' for debug"
+        ),
     )
-    parser.add_argument("--version", "-V", action="store_true", help="display this application version and exit")
     parser.add_argument(
-        "--file", "-f", nargs="+", type=str, default=None, help="select task configuration files (YAML)"
+        "--version",
+        "-V",
+        action="store_true",
+        dest="version",
+        help="display this application version and exit",
     )
     parser.add_argument(
-        "--log_config",
+        "--file",
+        "-f",
+        nargs="+",
+        type=str,
+        dest="file",
+        default=None,
+        help="select task configuration files (YAML)",
+    )
+    parser.add_argument(
+        "--log-config",
         "-l",
         type=str,
+        dest="log_config",
         default=None,
         help="select a logging configuration file (YAML or other)",
     )
@@ -62,7 +78,9 @@ def main() -> None:
     job_configuration_file_names = []
     for file in args.file:
         # Extracts only file paths
-        job_configuration_file_names.extend([x for x in glob.glob(file) if os.path.isfile(x)])
+        job_configuration_file_names.extend(
+            [x for x in glob.glob(file) if os.path.isfile(x)]
+        )
 
     if len(job_configuration_file_names) == 0:
         print("Check configuration file name, path or pattern.")
@@ -77,6 +95,10 @@ def main() -> None:
         TR.register(job_config)
 
     TR.run()
+
+    if len(TR.scheduling_tasks) == 0 and len(TR.observing_tasks) == 0:
+        logger.info("Scheduling/Observing task does not registered.")
+        return 0
 
     try:
         while True:

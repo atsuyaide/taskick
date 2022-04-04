@@ -29,7 +29,7 @@ optional arguments:
   --version, -V         display this application version and exit
   --file FILE [FILE ...], -f FILE [FILE ...]
                         select task configuration files (YAML)
-  --log_config LOG_CONFIG, -l LOG_CONFIG
+  --log-config LOG_CONFIG, -l LOG_CONFIG
                         select a logging configuration file (YAML or other)
 $ python -m taskick -V
 Taskick 0.1.5a4
