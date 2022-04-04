@@ -1,5 +1,7 @@
 # Taskick
 
+[![pypi-taskick](https://img.shields.io/pypi/v/taskick)](https://pypi.org/project/taskick/)
+
 Taskick is an event-driven Python library that automatically executes scripts or any commands.
 It not only automates tedious routine tasks and operations, but also makes it easy to develop [applications](https://github.com/atsuyaide/taskick#toy-example).
 

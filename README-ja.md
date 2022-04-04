@@ -1,5 +1,7 @@
 # Taskick
 
+[![pypi-taskick](https://img.shields.io/pypi/v/taskick)](https://pypi.org/project/taskick/)
+
 Taskick は, スクリプトやコマンドを自動的に実行するイベント駆動型のPythonライブラリです.
 面倒な定型作業や操作を自動化するだけでなく, [アプリケーション](https://github.com/atsuyaide/taskick#toy-example)の開発も容易にします.
 
