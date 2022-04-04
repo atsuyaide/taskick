@@ -45,8 +45,8 @@ Taskick 0.1.5a4
 ## Toy Example
 
 PNG画像をPDFに変換するtoy-exampleを紹介します.
-このサンプルでは, PNG画像が特定のフォルダに保存されたことを検出すると, 変換スクリプトを自動的に起動します.
-スクリプトはPNGをPDFに変換し, 出力先のフォルダに保存します.
+このサンプルでは, PNG画像が特定のフォルダに保存されたことを検知すると, 変換スクリプトを自動的に起動します.
+スクリプトはPNG画像をPDFに変換し, 出力先のフォルダに保存します.
 
 まず[taskick-example](https://github.com/atsuyaide/taskick-example)のコードをクローンします.
 
@@ -54,7 +54,7 @@ PNG画像をPDFに変換するtoy-exampleを紹介します.
 git clone https://github.com/atsuyaide/taskick-example.git
 ```
 
-クローンしたtaskick-exempleフォルダに移動し, 以下のコマンドを実行します.
+続いて, 以下のコマンドを実行します.
 
 ```shell
 $ cd taskick-example

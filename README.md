@@ -54,7 +54,7 @@ First, clone [taskick-example](https://github.com/atsuyaide/taskick-example).
 git clone https://github.com/atsuyaide/taskick-example.git
 ```
 
-Go to the cloned directory and start Taskick.
+Then, execute the following command.
 
 ```shell
 $ cd taskick-example
