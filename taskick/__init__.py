@@ -266,10 +266,10 @@ class CommandExecuter:
             propagate (bool, optional): _description_. Defaults to False.
             shell (bool, optional): _description_. Defaults to False.
         """
-        self.task_name = task_name
-        self.command = command
-        self.propagate = propagate
-        self.shell = shell
+        self._task_name = task_name
+        self._comand = command
+        self._propagate = propagate
+        self._shell = shell
 
     def _get_event_options(self, event) -> dict:
         """_summary_
@@ -303,8 +303,8 @@ class CommandExecuter:
             event (_type_): _description_
         """
         logger.debug(event)
-        command = self.command
-        if self.propagate:
+        command = self._comand
+        if self._propagate:
             event_options = self._get_event_options(event)
             command = get_execute_command_list(command, event_options)
 
@@ -323,11 +323,15 @@ class CommandExecuter:
             command (str, optional): _description_. Defaults to None.
         """
         if command is None:
-            command = " ".join(self.command)
+            command = " ".join(self._comand)
 
-        logger.info(f"Executing: {self.task_name}")
+        logger.info(f"Executing: {self._task_name}")
         logger.debug(f"Detail: {command}")
-        return subprocess.Popen(command, shell=self.shell)
+        return subprocess.Popen(command, shell=self._shell)
+
+    @property
+    def task_name(self):
+        return self
 
 
 class BaseThread(threading.Thread):
@@ -355,8 +359,8 @@ class TaskRunner:
 
     def __init__(self) -> None:
         """_summary_"""
-        self.scheduler = ThreadingScheduler()
-        self.observer = Observer()
+        self._scheduler = ThreadingScheduler()
+        self._observer = Observer()
         self._startup_execution_tasks = {}
         self._registered_tasks = {}
         self._await_tasks = {}  # {"A": "B"} -> "A" waits for "B" to finish.
@@ -395,17 +399,17 @@ class TaskRunner:
                 execution_detail["startup"] = True
             elif execution_detail["event_type"] == "time":
                 schedule_detail = execution_detail["detail"]
-                self.scheduler = update_scheduler(self.scheduler, schedule_detail["when"], task.execute_by_scheduler)
+                self._scheduler = update_scheduler(self._scheduler, schedule_detail["when"], task.execute_by_scheduler)
             elif execution_detail["event_type"] == "file":
                 observe_detail = execution_detail["detail"]
-                self.observer = update_observer(self.observer, observe_detail, task.execute_by_observer)
+                self._observer = update_observer(self._observer, observe_detail, task.execute_by_observer)
             else:
-                raise ValueError("'{:}' does not defined.".format(execution_detail["event_type"]))
+                raise ValueError('"{:}" does not defined.'.format(execution_detail["event_type"]))
 
             if execution_detail["startup"]:
                 logger.info("Startup execution option is selected.")
-                if "_await_task" in execution_detail.keys():
-                    self._await_tasks[task_name] = execution_detail["_await_task"]
+                if "await_task" in execution_detail.keys():
+                    self._await_tasks[task_name] = execution_detail["await_task"]
                 self._startup_execution_tasks[task_name] = task
 
             if task_name in self._registered_tasks.keys():
@@ -417,11 +421,11 @@ class TaskRunner:
         return self
 
     def _await_running_task(self, task_name) -> None:
-        for _await_task_name in self._await_tasks[task_name]:
-            if _await_task_name not in self.running_tasks.keys():
-                raise ValueError(f'"{_await_task_name}" is not running.')
-            logger.info(f'"{task_name}" is waiting for "{_await_task_name}" to finish.')
-            self.running_tasks[_await_task_name].wait()
+        for await_task_name in self._await_tasks[task_name]:
+            if await_task_name not in self.running_tasks.keys():
+                raise ValueError(f'"{await_task_name}" is not running.')
+            logger.info(f'"{task_name}" is waiting for "{await_task_name}" to finish.')
+            self.running_tasks[await_task_name].wait()
 
     def run(self) -> None:
         """_summary_"""
@@ -431,16 +435,16 @@ class TaskRunner:
                 self._await_running_task(task_name)
             self.running_tasks[task_name] = task.execute()
 
-        self.observer.start()
-        self.scheduler.start()
+        self._observer.start()
+        self._scheduler.start()
 
     def stop(self) -> None:
-        self.observer.stop()
-        self.scheduler.stop()
+        self._observer.stop()
+        self._scheduler.stop()
 
     def join(self) -> None:
-        self.observer.join()
-        self.scheduler.join()
+        self._observer.join()
+        self._scheduler.join()
 
     def __str__(self) -> str:
         pass
