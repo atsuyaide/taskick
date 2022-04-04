@@ -23,7 +23,7 @@ And,
 ```shell
 $ pip install taskick
 $ python -m taskick
-Taskick 0.1.5a4
+Taskick 0.1.5a5
 usage: python -m taskick [-h] [--verbose] [--version] [--file FILE [FILE ...]]
                          [--log-config LOG_CONFIG]
 
@@ -39,7 +39,7 @@ optional arguments:
   --log-config LOG_CONFIG, -l LOG_CONFIG
                         specify a logging configuration file
 $ python -m taskick -V
-Taskick 0.1.5a4
+Taskick 0.1.5a5
 ```
 
 ## Toy Example
