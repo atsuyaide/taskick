@@ -1,6 +1,3 @@
-__version__ = "0.1.5a4"
-
-
 import importlib
 import itertools
 import logging
@@ -13,6 +10,14 @@ from typing import Callable, List
 from schedule import Scheduler
 from watchdog.events import FileMovedEvent
 from watchdog.observers.polling import PollingObserver as Observer
+
+VERSION_MAJOR = "0"
+VERSION_MINOR = "1"
+VERSION_BUILD = "5a4"
+VERSION_INFO = (VERSION_MAJOR, VERSION_MINOR, VERSION_BUILD)
+VERSION_STRING = "%s.%s.%s" % VERSION_INFO
+
+__version__ = VERSION_STRING
 
 logger = logging.getLogger("taskick")
 
@@ -422,19 +427,21 @@ class TaskRunner:
 
     def _await_running_task(self, task_name) -> None:
         for await_task_name in self._await_tasks[task_name]:
-            if await_task_name not in self.running_tasks.keys():
+            if await_task_name not in self._running_tasks.keys():
                 raise ValueError(f'"{await_task_name}" is not running.')
             logger.info(f'"{task_name}" is waiting for "{await_task_name}" to finish.')
-            self.running_tasks[await_task_name].wait()
+            self._running_tasks[await_task_name].wait()
 
-    def run(self) -> None:
-        """_summary_"""
-        self.running_tasks = {}
+    def _run_startup_tasks(self):
+        self._running_tasks = {}
         for task_name, task in self._startup_execution_tasks.items():
             if task_name in self._await_tasks.keys():
                 self._await_running_task(task_name)
-            self.running_tasks[task_name] = task.execute()
+            self._running_tasks[task_name] = task.execute()
 
+    def run(self) -> None:
+        """_summary_"""
+        self._run_startup_tasks()
         self._observer.start()
         self._scheduler.start()
 
