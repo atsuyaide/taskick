@@ -3,7 +3,7 @@
 Taskick is an event-driven Python library that automatically executes scripts or any commands.
 It not only automates tedious routine tasks and operations, but also makes it easy to develop [applications](https://github.com/atsuyaide/taskick#toy-example).
 
-[日本語版 README](https://github.com/atsuyaide/taskick/blob/main/README-ja.md)
+[日本語版 README](README-ja.md)
 
 The main features of Taskick are as follows
 
