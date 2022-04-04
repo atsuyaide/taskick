@@ -24,8 +24,8 @@ And,
 $ pip install taskick
 $ python -m taskick
 Taskick 0.1.5a4
-usage: __main__.py [-h] [--verbose] [--version] [--file FILE [FILE ...]]
-                   [--log_config LOG_CONFIG]
+usage: python -m taskick [-h] [--verbose] [--version] [--file FILE [FILE ...]]
+                         [--log-config LOG_CONFIG]
 
 optional arguments:
   -h, --help            show this help message and exit
@@ -34,9 +34,10 @@ optional arguments:
                         debug
   --version, -V         display this application version and exit
   --file FILE [FILE ...], -f FILE [FILE ...]
-                        select task configuration files (YAML)
+                        specify configuration files (YAML) for the task to
+                        be executed
   --log-config LOG_CONFIG, -l LOG_CONFIG
-                        select a logging configuration file (YAML or other)
+                        specify a logging configuration file
 $ python -m taskick -V
 Taskick 0.1.5a4
 ```

@@ -122,7 +122,7 @@ def main() -> None:
         type=str,
         dest="file",
         default=None,
-        help="select task configuration files (YAML)",
+        help="specify configuration files (YAML) for the task to be executed",
     )
     parser.add_argument(
         "--log-config",
@@ -130,7 +130,7 @@ def main() -> None:
         type=str,
         dest="log_config",
         default=None,
-        help="select a logging configuration file (YAML or other)",
+        help="specify a logging configuration file",
     )
 
     taskicker = Taskicker(parser)
