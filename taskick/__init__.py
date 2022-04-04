@@ -455,33 +455,43 @@ class TaskRunner:
 
     def _await_running_task(self, task_name) -> None:
         for await_task_name in self._await_tasks[task_name]:
-            if await_task_name not in self._running_tasks.keys():
+            if await_task_name not in self._running_startup_tasks.keys():
                 raise ValueError(f'"{await_task_name}" is not running.')
             logger.info(f'"{task_name}" is waiting for "{await_task_name}" to finish.')
-            self._running_tasks[await_task_name].wait()
+            self._running_startup_tasks[await_task_name].wait()
 
-    def _run_startup_tasks(self):
-        self._running_tasks = {}
+    def _run_startup_task(self):
+        self._running_startup_tasks = {}
         for task_name, task in self._startup_execution_tasks.items():
             if task_name in self._await_tasks.keys():
                 self._await_running_task(task_name)
-            self._running_tasks[task_name] = task.execute()
+            self._running_startup_tasks[task_name] = task.execute()
 
     def run(self) -> None:
         """
         Executes registered tasks.
         Scheduled/Observed tasks will not be executed until the startup task is complete.
         """
-        self._run_startup_tasks()
+        self._run_startup_task()
         self._observer.start()
         self._scheduler.start()
 
+    def stop_startup_task(self):
+        for proc in self._running_startup_tasks.values():
+            proc.kill()
+
+    def join_startup_task(self):
+        for proc in self._running_startup_tasks.values():
+            proc.wait()
+
     def stop(self) -> None:
         """Stop execution of registered tasks other than the startup task."""
+        self.stop_startup_task()
         self._observer.stop()
         self._scheduler.stop()
 
     def join(self) -> None:
+        self.join_startup_task()
         self._observer.join()
         self._scheduler.join()
 

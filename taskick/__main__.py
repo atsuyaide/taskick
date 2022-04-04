@@ -68,12 +68,12 @@ def main() -> None:
 
     if args.version:
         print(f"Taskick {__version__}")
-        sys.exit(0)
+        return 0
 
     if args.file is None:
         print(f"Taskick {__version__}")
         parser.print_help()
-        sys.exit(0)
+        return 0
 
     job_configuration_file_names = []
     for file in args.file:
@@ -94,13 +94,16 @@ def main() -> None:
             job_config = yaml.safe_load(f)
         TR.register(job_config)
 
-    TR.run()
-
-    if len(TR.scheduling_tasks) == 0 and len(TR.observing_tasks) == 0:
-        logger.info("Scheduling/Observing task does not registered.")
-        return 0
-
     try:
+        TR.run()
+
+        if len(TR.scheduling_tasks) == 0 and len(TR.observing_tasks) == 0:
+            logger.info("Scheduling/Observing task does not registered.")
+            TR.join_startup_task()
+            TR.stop()
+            TR.join()
+            return 0
+
         while True:
             time.sleep(1)
     except KeyboardInterrupt:
