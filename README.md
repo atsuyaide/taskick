@@ -1,16 +1,20 @@
 # Taskick
 
 Taskick is an event-driven Python library that automatically executes scripts or any commands.
-It not only automates tedious routine tasks and operations, but also makes it easy to develop [applications](#toy-example).
+It not only automates tedious routine tasks and operations, but also makes it easy to develop [applications](https://github.com/atsuyaide/taskick#toy-example).
 
-Users can concentrate on developing scripts to run, and simply create a configuration file (YAML) to automatically execute scripts triggered by any date, time, or event.
+[日本語版 README](https://github.com/atsuyaide/taskick/blob/main/README-ja.md)
 
 The main features of Taskick are as follows
 
+- Automatically execute commands and scripts.
 - Script execution timing can be managed in a configuration file (YAML).
-- Can specify datetime and directory/file operations as task triggers.
+- You can specify datetime and directory/file operations as task triggers.
+
+And,
+
 - Execution schedules can be specified in Crontab format.
-- [Watchdog](https://github.com/gorakhargosh/watchdog) is used to detect directory and file operations. It is also possible to specify any [events API](https://python-watchdog.readthedocs.io/en/stable/api.html#module-watchdog.events) on the configuration file.
+- [Watchdog](https://github.com/gorakhargosh/watchdog) is used to detect directory and file operations.  Any [events API](https://python-watchdog.readthedocs.io/en/stable/api.html#module-watchdog.events) provided by Watchdog can be specified in the configuration file.
 
 ## Installation
 
@@ -71,10 +75,12 @@ waiting 5 seconds...
 INFO:taskick:Executing: remove_files_in_input_folder
 ```
 
+You can now launch an application that converts PNG images to PDF.
+
 When a PNG image is saved in the input folder, a converted PDF file is output in the output folder.
 Files in the input folder are automatically deleted at startup or every minute.
 
 
 ![png2gif](https://github.com/atsuyaide/taskick/raw/main/png_to_pdf.gif)
 
-These tasks are controlled by `main.yaml` and managed by Taskick. These tasks are controlled by Taskick, and the behavior of the tasks is controlled by `main.yaml` and `welcome.yaml`.
+This application consist of `welcome.yaml` and `main.yaml`, and Taskick manages the execution of these tasks.
