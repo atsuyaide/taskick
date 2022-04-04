@@ -17,7 +17,7 @@ logger = logging.getLogger("taskick")
 
 
 def test_version():
-    assert __version__ == "0.1.5a4"
+    assert __version__ == "0.1.5a5"
 
 
 def _check_job_properties(expected_job, job):
@@ -286,23 +286,6 @@ def test_register(
     assert len(TR.observing_tasks) == expected_observing_task_count
 
 
-# @pytest.mark.parametrize(
-#     ("file_name", "expected_schedulering_task_count", "expected_observing_task_count"),
-#     [
-#         ("config/await.yaml", 1, 1),
-#     ],
-# )
-# def test_awaiting_task(file_name, expected_task_count, expected_startup_task_count):
-#     test_dir = os.path.dirname(__file__)
-#     with open(os.path.join(test_dir, file_name), "r", encoding="utf-8") as f:
-#         config = yaml.safe_load(f)
-#
-#     TR = TaskRunner()
-#     TR.register(config)
-#     assert len(TR.tasks) == expected_task_count
-#     assert len(TR.startup_tasks) == expected_startup_task_count
-
-
 @pytest.mark.parametrize(
     ("task_name", "expected_exception"),
     [
@@ -313,10 +296,8 @@ def test_register(
     ],
 )
 def test_invalid_registration(task_name, expected_exception):
-    test_dir = os.path.dirname(__file__)
-    with open(
-        os.path.join(test_dir, "config/invalid.yaml"), "r", encoding="utf-8"
-    ) as f:
+    test_path = os.path.join(os.path.dirname(__file__), "config/invalid.yaml")
+    with open(test_path, "r", encoding="utf-8") as f:
         config = yaml.safe_load(f)
 
     invalid_config = {task_name: config[task_name]}
