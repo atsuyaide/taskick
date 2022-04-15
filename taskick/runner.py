@@ -6,10 +6,11 @@ import time
 from typing import Callable
 
 from schedule import Scheduler
-from taskick.details import ObservingDetail, TaskDetail
-from taskick.utils import set_a_task_to_scheduler, simplify_crontab_format
 from watchdog.events import FileMovedEvent
 from watchdog.observers.polling import PollingObserver as Observer
+
+from .details import ObservingDetail, TaskDetail
+from .utils import set_a_task_to_scheduler, simplify_crontab_format
 
 logger = logging.getLogger("taskick")
 
@@ -219,12 +220,6 @@ class TaskRunner:
         self.join_startup_task()
         self._observer.join()
         self._scheduler.join()
-
-    def __str__(self) -> str:
-        pass
-
-    def __repr__(self) -> str:
-        pass
 
     @property
     def scheduling_tasks(self):
