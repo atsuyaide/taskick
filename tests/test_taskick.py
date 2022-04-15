@@ -4,13 +4,12 @@ import os
 import pytest
 import schedule
 import yaml
-from taskick import (
-    TaskRunner,
-    __version__,
+from taskick import __version__
+from taskick.runner import TaskRunner, update_scheduler
+from taskick.utils import (
     get_execute_command_list,
     set_a_task_to_scheduler,
     simplify_crontab_format,
-    update_scheduler,
 )
 
 logger = logging.getLogger("taskick")
