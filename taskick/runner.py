@@ -10,7 +10,11 @@ from watchdog.events import FileMovedEvent
 from watchdog.observers.polling import PollingObserver as Observer
 
 from .details import ObservingDetail, TaskDetail
-from .utils import set_a_task_to_scheduler, simplify_crontab_format
+from .utils import (
+    get_execute_command_list,
+    set_a_task_to_scheduler,
+    simplify_crontab_format,
+)
 
 logger = logging.getLogger("taskick")
 
