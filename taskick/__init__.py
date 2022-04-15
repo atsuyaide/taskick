@@ -400,8 +400,13 @@ class TaskDetail:
         return self._ED.await_task
 
     @property
-    def execution_detail(self):
-        return self._ED
+    def executor_args(self) -> dict:
+        return {
+            "task_name": self.task_name,
+            "command": get_execute_command_list(self.commands, self.options),
+            "propagate": self.is_propagate,
+            "shell": self.is_shell,
+        }
 
     def is_active(self) -> bool:
         return self._is_active
@@ -472,48 +477,41 @@ class TaskRunner:
     def register(self, job_config: dict):
         TD_list = [TaskDetail(*params) for params in job_config.items()]
         for TD in TD_list:
-            # logger.debug(task_detail)
-
             if not TD.is_active():
                 logger.info(f"Skipped: {TD.task_name}")
                 continue
-
-            executor_args = {
-                "task_name": TD.task_name,
-                "command": get_execute_command_list(TD.commands, TD.options),
-                "propagate": TD.is_propagate,
-                "shell": TD.is_shell,
-            }
-            task = CommandExecuter(**executor_args)
-
-            logger.info(f"Processing: {TD.task_name}")
-
-            if TD.event_type == "time":
-                self._scheduler = update_scheduler(
-                    self._scheduler,
-                    TD.when_run,
-                    task.execute_by_scheduler,
-                )
-                self._scheduling_tasks[TD.task_name] = task
-            elif TD.event_type == "file":
-                self._observer = update_observer(
-                    self._observer, TD.when_run, task.execute_by_observer
-                )
-                self._observing_tasks[TD.task_name] = task
-
-            if TD.is_startup():
-                logger.info("Startup execution option is selected.")
-                if TD.is_await():
-                    self._await_tasks[TD.task_name] = TD.await_task
-                self._startup_execution_tasks[TD.task_name] = task
-
-            if TD.task_name in self._registered_tasks.keys():
+            if self.is_registered(TD.task_name):
                 raise ValueError(f"{TD.task_name} is already exists.")
 
+            logger.info(f"Processing: {TD.task_name}")
+            task = CommandExecuter(**TD.executor_args)
+
+            if TD.is_startup():
+                logger.info("Startup option is selected.")
+                self._startup_execution_tasks[TD.task_name] = task
+            if TD.is_await():
+                logger.info("Await option is selected.")
+                self._await_tasks[TD.task_name] = TD.await_task
+
+            self._register(TD, task)
             self._registered_tasks[TD.task_name] = task
-            logger.info(f"Registered: {TD.task_name}")
+            logger.info("Registered")
 
         return self
+
+    def _register(self, TD: TaskDetail, task: CommandExecuter) -> None:
+        if TD.event_type == "time":
+            self._scheduler = update_scheduler(
+                self._scheduler,
+                TD.when_run,
+                task.execute_by_scheduler,
+            )
+            self._scheduling_tasks[TD.task_name] = task
+        if TD.event_type == "file":
+            self._observer = update_observer(
+                self._observer, TD.when_run, task.execute_by_observer
+            )
+            self._observing_tasks[TD.task_name] = task
 
     def _await_running_task(self, task_name) -> None:
         for await_task_name in self._await_tasks[task_name]:
@@ -536,6 +534,9 @@ class TaskRunner:
         self._run_startup_task()
         self._observer.start()
         self._scheduler.start()
+
+    def is_registered(self, task_name: str) -> bool:
+        return task_name in self._registered_tasks.keys()
 
     def stop_startup_task(self):
         for proc in self._running_startup_tasks.values():
