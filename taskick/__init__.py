@@ -5,7 +5,7 @@ import re
 import subprocess
 import threading
 import time
-from typing import Callable, List
+from typing import Callable, List, Optional, Union
 
 from schedule import Scheduler
 from watchdog.events import FileMovedEvent
@@ -176,45 +176,6 @@ def simplify_crontab_format(crontab_format: str) -> List[str]:
     return simple_form_list
 
 
-def update_scheduler(
-    scheduler: Scheduler, crontab_format: str, task: Callable, *args, **kwargs
-) -> Scheduler:
-    crontab_format_list = simplify_crontab_format(crontab_format)
-
-    for crontab_format in crontab_format_list:
-        scheduler = set_a_task_to_scheduler(
-            scheduler, crontab_format, task, *args, **kwargs
-        )
-
-    return scheduler
-
-
-def update_observer(
-    observer: Observer, observe_detail: dict, task: Callable
-) -> Observer:
-    handler_detail = observe_detail["handler"]
-    event_type_detail = observe_detail["when"]
-
-    EventHandlers = importlib.import_module("watchdog.events")
-
-    if "args" in handler_detail.keys():
-        handler = getattr(EventHandlers, handler_detail["name"])(
-            **handler_detail["args"]
-        )
-    else:
-        handler = getattr(EventHandlers, handler_detail["name"])()
-
-    for event_type in event_type_detail:
-        setattr(handler, f"on_{event_type}", task)
-
-    del observe_detail["handler"]
-    del observe_detail["when"]
-    observe_detail["event_handler"] = handler
-
-    observer.schedule(**observe_detail)
-    return observer
-
-
 def get_execute_command_list(commands: list, options: dict) -> List[str]:
     if options is None:
         return commands
@@ -300,6 +261,202 @@ class ThreadingScheduler(Scheduler, BaseThread):
         self._is_active = False
 
 
+class SchedulingDetail:
+    def __init__(self, detail: dict) -> None:
+        self._when = detail["when"]
+
+    @property
+    def when(self) -> str:
+        return self._when
+
+
+class ObservingDetail:
+    def __init__(self, detail: dict) -> None:
+        self._path = detail["path"]
+        self._when = detail["when"]
+        self._recursive = detail["recursive"]
+        self._handler = detail["handler"]
+        self._handler_args = detail
+        del self._handler_args["handler"]
+        del self._handler_args["when"]
+
+    @property
+    def when(self) -> str:
+        return self._when
+
+    @property
+    def recursive(self) -> str:
+        return self._recursive
+
+    @property
+    def handler(self) -> str:
+        return self._handler
+
+    @property
+    def handler_args(self):
+        return self._handler_args
+
+
+class BaseExecutionDetail:
+    def __init__(self, detail: dict) -> None:
+        self._propagate = (
+            False if "propagate" not in detail.keys() else detail["propagate"],
+        )
+        self._event_type = detail["event_type"]
+        self._shell = (True if "shell" not in detail.keys() else detail["shell"],)
+        self._startup = detail["startup"] if "startup" in detail.keys() else False
+        self._await_task = (
+            detail["await_task"] if "await_task" in detail.keys() else None
+        )
+
+    def is_startup(self) -> bool:
+        return self._startup
+
+    def is_propagate(self) -> bool:
+        return self._propagate
+
+    def is_shell(self) -> bool:
+        return self._shell
+
+    def is_await(self) -> bool:
+        return self._await_task is not None
+
+    @property
+    def await_task(self) -> str:
+        return self._await_task
+
+
+class TimeExecutionDetail(BaseExecutionDetail):
+    def __init__(self, detail: dict) -> None:
+        super().__init__(detail)
+        self.SD = SchedulingDetail(detail["detail"])
+
+    @property
+    def when(self) -> str:
+        return self.SD.when
+
+
+class FileExecutionDetail(BaseExecutionDetail):
+    def __init__(self, detail: dict) -> None:
+        super().__init__(detail)
+        self.OD = ObservingDetail(detail["detail"])
+
+    @property
+    def when(self) -> ObservingDetail:
+        return self.OD
+
+
+class NullExecutionDetail(BaseExecutionDetail):
+    def __init__(self, detail: dict) -> None:
+        super().__init__(detail)
+        self._startup = True
+
+    @property
+    def when(self) -> str:
+        pass
+
+
+def get_execution_detail(detail: dict) -> BaseExecutionDetail:
+    if detail["event_type"] is None:
+        return NullExecutionDetail(detail)
+    if detail["event_type"] == "time":
+        return TimeExecutionDetail(detail)
+    if detail["event_type"] == "file":
+        return FileExecutionDetail(detail)
+
+    raise ValueError('"{:}" does not defined.'.format(detail["event_type"]))
+
+
+class TaskDetail:
+    def __init__(self, task_name: str, detail: dict) -> None:
+        self._ED = get_execution_detail(detail["execution"])
+        self._task_name = task_name
+        self._commands = detail["commands"]
+        self._options = detail["options"] if "options" in detail.keys() else None
+        self._is_active = True if detail["status"] == 1 else False
+
+    @property
+    def task_name(self) -> str:
+        return self._task_name
+
+    @property
+    def event_type(self) -> bool:
+        return self._ED._event_type
+
+    @property
+    def options(self) -> Optional[List[str]]:
+        return self._options
+
+    @property
+    def commands(self) -> List[str]:
+        return self._commands
+
+    @property
+    def when_run(self) -> Union[str, List[str]]:
+        return self._ED.when
+
+    @property
+    def await_task(self) -> str:
+        return self._ED.await_task
+
+    @property
+    def execution_detail(self):
+        return self._ED
+
+    def is_active(self) -> bool:
+        return self._is_active
+
+    def is_startup(self) -> bool:
+        return self._ED.is_startup()
+
+    def is_propagate(self) -> bool:
+        return self._ED.is_propagate()
+
+    def is_shell(self) -> bool:
+        return self._ED.is_shell()
+
+    def is_await(self) -> bool:
+        return self._ED.is_await()
+
+
+def update_scheduler(
+    scheduler: Scheduler, crontab_format: str, task: Callable, *args, **kwargs
+) -> Scheduler:
+    crontab_format_list = simplify_crontab_format(crontab_format)
+
+    for crontab_format in crontab_format_list:
+        scheduler = set_a_task_to_scheduler(
+            scheduler, crontab_format, task, *args, **kwargs
+        )
+
+    return scheduler
+
+
+def update_observer(
+    observer: Observer, observe_detail: ObservingDetail, task: Callable
+) -> Observer:
+    handler_detail = observe_detail.handler
+    event_type_detail = observe_detail.when
+
+    EventHandlers = importlib.import_module("watchdog.events")
+
+    if "args" in handler_detail.keys():
+        handler = getattr(EventHandlers, handler_detail["name"])(
+            **handler_detail["args"]
+        )
+    else:
+        handler = getattr(EventHandlers, handler_detail["name"])()
+
+    for event_type in event_type_detail:
+        setattr(handler, f"on_{event_type}", task)
+
+    kwargs = observe_detail.handler_args
+    kwargs["event_handler"] = handler
+    observer.schedule(**kwargs)
+
+    return observer
+
+
 class TaskRunner:
     def __init__(self) -> None:
         self._scheduler = ThreadingScheduler()
@@ -313,60 +470,48 @@ class TaskRunner:
         self._await_tasks = {}  # {"A": "B"} -> "A" waits for "B" to finish.
 
     def register(self, job_config: dict):
-        for task_name, task_detail in job_config.items():
-            logger.debug(task_detail)
-            if task_detail["status"] != 1:
-                logger.info(f"Skipped: {task_name}")
+        TD_list = [TaskDetail(*params) for params in job_config.items()]
+        for TD in TD_list:
+            # logger.debug(task_detail)
+
+            if not TD.is_active():
+                logger.info(f"Skipped: {TD.task_name}")
                 continue
 
-            logger.info(f"Processing: {task_name}")
-            options = (
-                task_detail["options"] if "options" in task_detail.keys() else None
-            )
-            execution_detail = task_detail["execution"]
-
             executor_args = {
-                "task_name": task_name,
-                "command": get_execute_command_list(task_detail["commands"], options),
-                "propagate": False
-                if "propagate" not in execution_detail.keys()
-                else execution_detail["propagate"],
-                "shell": True
-                if "shell" not in execution_detail.keys()
-                else execution_detail["shell"],
+                "task_name": TD.task_name,
+                "command": get_execute_command_list(TD.commands, TD.options),
+                "propagate": TD.is_propagate,
+                "shell": TD.is_shell,
             }
             task = CommandExecuter(**executor_args)
 
-            if execution_detail["event_type"] is None:
-                execution_detail["startup"] = True
-            elif execution_detail["event_type"] == "time":
-                schedule_detail = execution_detail["detail"]
+            logger.info(f"Processing: {TD.task_name}")
+
+            if TD.event_type == "time":
                 self._scheduler = update_scheduler(
-                    self._scheduler, schedule_detail["when"], task.execute_by_scheduler
+                    self._scheduler,
+                    TD.when_run,
+                    task.execute_by_scheduler,
                 )
-                self._scheduling_tasks[task_name] = task
-            elif execution_detail["event_type"] == "file":
-                observe_detail = execution_detail["detail"]
+                self._scheduling_tasks[TD.task_name] = task
+            elif TD.event_type == "file":
                 self._observer = update_observer(
-                    self._observer, observe_detail, task.execute_by_observer
+                    self._observer, TD.when_run, task.execute_by_observer
                 )
-                self._observing_tasks[task_name] = task
-            else:
-                raise ValueError(
-                    '"{:}" does not defined.'.format(execution_detail["event_type"])
-                )
+                self._observing_tasks[TD.task_name] = task
 
-            if execution_detail["startup"]:
+            if TD.is_startup():
                 logger.info("Startup execution option is selected.")
-                if "await_task" in execution_detail.keys():
-                    self._await_tasks[task_name] = execution_detail["await_task"]
-                self._startup_execution_tasks[task_name] = task
+                if TD.is_await():
+                    self._await_tasks[TD.task_name] = TD.await_task
+                self._startup_execution_tasks[TD.task_name] = task
 
-            if task_name in self._registered_tasks.keys():
-                raise ValueError(f"{task_name} is already exists.")
+            if TD.task_name in self._registered_tasks.keys():
+                raise ValueError(f"{TD.task_name} is already exists.")
 
-            self._registered_tasks[task_name] = task
-            logger.info(f"Registered: {task_name}")
+            self._registered_tasks[TD.task_name] = task
+            logger.info(f"Registered: {TD.task_name}")
 
         return self
 
