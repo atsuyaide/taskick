@@ -46,19 +46,27 @@ class Taskicker:
         self._show_version()
         self._parser.print_help()
 
-    def _register(self, config_file: List[str]) -> None:
-        extended_config_file_list = []
-        for file in config_file:
-            # Extract only files matching the pattern
-            extended_config_file_list.extend(
+    def _register(self, config_files: List[str]) -> None:
+        extended_config_files = []
+        for file in config_files:
+            # Extract only files
+            extended_config_files.extend(
                 [x for x in glob.glob(file) if os.path.isfile(x)]
             )
 
-        for file_name in extended_config_file_list:
+        for file_name in extended_config_files:
             logger.info(f"Loading: {file_name}")
             with open(file_name, "r", encoding="utf-8") as f:
                 job_config = yaml.safe_load(f)
             self._TR.register(job_config)
+
+    def _get_config_files(self, args: ArgumentParser):
+        if args.batch_load is not None:
+            with open(args.batch_load, "r", encoding="utf-8") as f:
+                config_files = yaml.safe_load(f)
+        else:
+            config_files = args.file
+        return config_files
 
     def run(self) -> None:
         args = self._parser.parse_args()
@@ -66,12 +74,12 @@ class Taskicker:
             self._show_version()
             return 0
 
-        if args.file is None:
+        if args.file is None and args.batch_load is None:
             self._show_help()
             return 0
 
         try:
-            self._register(args.file)
+            self._register(self._get_config_files(args))
             self._TR.run()
 
             if len(self._TR.scheduling_tasks) + len(self._TR.observing_tasks) == 0:
@@ -114,6 +122,14 @@ def main() -> None:
         action="store_true",
         dest="version",
         help="display this application version and exit",
+    )
+    parser.add_argument(
+        "--batch-load",
+        "-b",
+        type=str,
+        dest="batch_load",
+        default=None,
+        help="configuration files can be load in batches",
     )
     parser.add_argument(
         "--file",
