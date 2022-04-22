@@ -84,6 +84,7 @@ def test_command_executer():
         "expected_observing_task_count",
     ),
     [
+        ("config/empty.yaml", 0, 0, 0, 0),
         ("config/vanilla.yaml", 1, 1, 0, 0),
         ("config/time_trigger.yaml", 2, 1, 2, 0),
         ("config/file_trigger.yaml", 3, 0, 0, 3),

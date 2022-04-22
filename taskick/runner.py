@@ -1,14 +1,20 @@
+import glob
 import importlib
 import logging
+import logging.config
+import os
 import subprocess
 import threading
 import time
-from typing import Callable
+from argparse import ArgumentParser
+from typing import Callable, List
 
+import yaml
 from schedule import Scheduler
 from watchdog.events import FileMovedEvent
 from watchdog.observers.polling import PollingObserver as Observer
 
+from . import __version__
 from .details import ObservingDetail, TaskDetail
 from .utils import (
     get_execute_command_list,
@@ -240,3 +246,93 @@ class TaskRunner:
     @property
     def startup_tasks(self) -> dict:
         return self._startup_execution_tasks
+
+
+class NoRegisteredTaskException(Exception):
+    pass
+
+
+class Taskicker:
+    def __init__(self, parser: ArgumentParser) -> None:
+        self._parser = parser
+        self._setup_logger()
+        self._TR = TaskRunner()
+
+    def _setup_logger(self) -> None:
+        args = self._parser.parse_args()
+
+        # Default logging level: WARNING(30), -vv -> INFO(20)
+        level = 40 - 10 * args.verbose if args.verbose > 0 else 30
+        logging.basicConfig(level=level)
+
+        if args.log_config is not None:
+            file_extention = os.path.splitext(args.log_config)[-1]
+            if file_extention == ".yaml":
+                with open(args.log_config, "r") as f:
+                    config = yaml.safe_load(f.read())
+                    logging.config.dictConfig(config)
+            else:  # *.(conf|ini|...)
+                logging.config.fileConfig(args.log_config)
+
+    def _show_version(self) -> None:
+        print(f"Taskick {__version__}")
+
+    def _show_help(self) -> None:
+        self._show_version()
+        self._parser.print_help()
+
+    def _register(self, config_files: List[str]) -> None:
+        extended_config_files = []
+        for file in config_files:
+            # Extract only files
+            extended_config_files.extend(
+                [x for x in glob.glob(file) if os.path.isfile(x)]
+            )
+
+        for file_name in extended_config_files:
+            logger.info(f"Loading: {file_name}")
+            with open(file_name, "r", encoding="utf-8") as f:
+                job_config = yaml.safe_load(f)
+            self._TR.register(job_config)
+
+    def _get_config_files(self, args: ArgumentParser):
+        if args.batch_load is not None:
+            with open(args.batch_load, "r", encoding="utf-8") as f:
+                config_files = yaml.safe_load(f)
+        else:
+            config_files = args.file
+        return config_files
+
+    def run(self) -> None:
+        args = self._parser.parse_args()
+        if args.version:
+            self._show_version()
+            return 0
+
+        if args.file is None and args.batch_load is None:
+            self._show_help()
+            return 0
+
+        try:
+            self._register(self._get_config_files(args))
+            self._TR.run()
+
+            if len(self._TR.scheduling_tasks) + len(self._TR.observing_tasks) == 0:
+                logger.info("Scheduling/Observing task does not registered.")
+                self._TR.join_startup_task()
+                raise NoRegisteredTaskException
+
+            while True:
+                time.sleep(1)
+        except NoRegisteredTaskException:
+            pass
+        except KeyboardInterrupt:
+            logger.debug("Ctrl-C detected.")
+        except Exception as e:
+            import traceback
+
+            logger.error(e)
+            traceback.print_exc(e)
+        finally:
+            self._TR.stop()
+            self._TR.join()

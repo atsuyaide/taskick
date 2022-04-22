@@ -1,3 +1,4 @@
+- ./tests/config/empty.yaml
 - ./tests/config/vanilla.yaml
 - ./tests/config/file_trigger.yaml
 - ./tests/config/time_trigger.yaml
