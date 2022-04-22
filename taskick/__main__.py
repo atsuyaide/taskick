@@ -8,7 +8,9 @@ from argparse import ArgumentParser
 from typing import List
 
 import yaml
-from taskick import TaskRunner, __version__
+
+from . import __version__
+from .runner import TaskRunner
 
 logger = logging.getLogger("taskick")
 
