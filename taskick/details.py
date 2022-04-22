@@ -1,6 +1,6 @@
 from typing import List, Optional, Union
 
-from .utils import get_execute_command_list
+from taskick.utils import get_execute_command_list
 
 
 class SchedulingDetail:

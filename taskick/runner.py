@@ -11,16 +11,15 @@ from typing import Callable, List
 
 import yaml
 from schedule import Scheduler
-from watchdog.events import FileMovedEvent
-from watchdog.observers.polling import PollingObserver as Observer
-
-from . import __version__
-from .details import ObservingDetail, TaskDetail
-from .utils import (
+from taskick import __version__
+from taskick.details import ObservingDetail, TaskDetail
+from taskick.utils import (
     get_execute_command_list,
     set_a_task_to_scheduler,
     simplify_crontab_format,
 )
+from watchdog.events import FileMovedEvent
+from watchdog.observers.polling import PollingObserver as Observer
 
 logger = logging.getLogger("taskick")
 
@@ -258,51 +257,6 @@ class Taskicker:
         self._setup_logger()
         self._TR = TaskRunner()
 
-    def _setup_logger(self) -> None:
-        args = self._parser.parse_args()
-
-        # Default logging level: WARNING(30), -vv -> INFO(20)
-        level = 40 - 10 * args.verbose if args.verbose > 0 else 30
-        logging.basicConfig(level=level)
-
-        if args.log_config is not None:
-            file_extention = os.path.splitext(args.log_config)[-1]
-            if file_extention == ".yaml":
-                with open(args.log_config, "r") as f:
-                    config = yaml.safe_load(f.read())
-                    logging.config.dictConfig(config)
-            else:  # *.(conf|ini|...)
-                logging.config.fileConfig(args.log_config)
-
-    def _show_version(self) -> None:
-        print(f"Taskick {__version__}")
-
-    def _show_help(self) -> None:
-        self._show_version()
-        self._parser.print_help()
-
-    def _register(self, config_files: List[str]) -> None:
-        extended_config_files = []
-        for file in config_files:
-            # Extract only files
-            extended_config_files.extend(
-                [x for x in glob.glob(file) if os.path.isfile(x)]
-            )
-
-        for file_name in extended_config_files:
-            logger.info(f"Loading: {file_name}")
-            with open(file_name, "r", encoding="utf-8") as f:
-                job_config = yaml.safe_load(f)
-            self._TR.register(job_config)
-
-    def _get_config_files(self, args: ArgumentParser):
-        if args.batch_load is not None:
-            with open(args.batch_load, "r", encoding="utf-8") as f:
-                config_files = yaml.safe_load(f)
-        else:
-            config_files = args.file
-        return config_files
-
     def run(self) -> None:
         args = self._parser.parse_args()
         if args.version:
@@ -336,3 +290,100 @@ class Taskicker:
         finally:
             self._TR.stop()
             self._TR.join()
+
+    def _show_version(self) -> None:
+        print(f"Taskick {__version__}")
+
+    def _show_help(self) -> None:
+        self._show_version()
+        self._parser.print_help()
+
+    def _register(self, config_files: List[str]) -> None:
+        extended_config_files = []
+        for file in config_files:
+            # Extract only files
+            extended_config_files.extend(
+                [x for x in glob.glob(file) if os.path.isfile(x)]
+            )
+
+        for file_name in extended_config_files:
+            logger.info(f"Loading: {file_name}")
+            with open(file_name, "r", encoding="utf-8") as f:
+                job_config = yaml.safe_load(f)
+            self._TR.register(job_config)
+
+    def _get_config_files(self, args: ArgumentParser):
+        if args.batch_load is not None:
+            with open(args.batch_load, "r", encoding="utf-8") as f:
+                config_files = yaml.safe_load(f)
+        else:
+            config_files = args.file
+        return config_files
+
+    def _setup_logger(self) -> None:
+        args = self._parser.parse_args()
+
+        # Default logging level: WARNING(30), -vv -> INFO(20)
+        level = 40 - 10 * args.verbose if args.verbose > 0 else 30
+        logging.basicConfig(level=level)
+
+        if args.log_config is not None:
+            file_extention = os.path.splitext(args.log_config)[-1]
+            if file_extention == ".yaml":
+                with open(args.log_config, "r") as f:
+                    config = yaml.safe_load(f.read())
+                    logging.config.dictConfig(config)
+            else:  # *.(conf|ini|...)
+                logging.config.fileConfig(args.log_config)
+
+
+def main():
+    def get_parser() -> ArgumentParser:
+        parser = ArgumentParser(prog="python -m taskick")
+        parser.add_argument(
+            "--verbose",
+            "-v",
+            action="count",
+            dest="verbose",
+            default=0,
+            help=(
+                "increase the verbosity of messages: '-v' for normal output, '-vv' for"
+                " more verbose output and '-vvv' for debug"
+            ),
+        )
+        parser.add_argument(
+            "--version",
+            "-V",
+            action="store_true",
+            dest="version",
+            help="display this application version and exit",
+        )
+        parser.add_argument(
+            "--batch-load",
+            "-b",
+            type=str,
+            dest="batch_load",
+            default=None,
+            help="configuration files can be load in batches",
+        )
+        parser.add_argument(
+            "--file",
+            "-f",
+            nargs="+",
+            type=str,
+            dest="file",
+            default=None,
+            help="specify configuration files (YAML) for the task to be executed",
+        )
+        parser.add_argument(
+            "--log-config",
+            "-l",
+            type=str,
+            dest="log_config",
+            default=None,
+            help="specify a logging configuration file",
+        )
+        return parser
+
+    taskicker = Taskicker(get_parser())
+    return taskicker.run()
