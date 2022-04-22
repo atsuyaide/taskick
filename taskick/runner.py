@@ -66,23 +66,6 @@ class CommandExecuter:
         self._propagate = propagate
         self._shell = shell
 
-    def _get_event_options(self, event) -> dict:
-        if isinstance(event, FileMovedEvent):
-            event_keys = ["--event_type", "--src_path", "--dest_path", "--is_directory"]
-            event_values = event.key
-        else:
-            event_keys = ["--event_type", "--src_path", "--is_directory"]
-            event_values = event.key
-
-        event_options = dict(zip(event_keys, event_values))
-
-        if event_options["--is_directory"]:
-            event_options["--is_directory"] = None
-        else:
-            del event_options["--is_directory"]
-
-        return event_options
-
     def execute_by_observer(self, event) -> None:
         logger.debug(event)
         command = self._comand
@@ -104,6 +87,23 @@ class CommandExecuter:
         logger.info(f"Executing: {self._task_name}")
         logger.debug(f"Executing detail: {command}")
         return subprocess.Popen(command, shell=self._shell)
+
+    def _get_event_options(self, event) -> dict:
+        if isinstance(event, FileMovedEvent):
+            event_keys = ["--event_type", "--src_path", "--dest_path", "--is_directory"]
+            event_values = event.key
+        else:
+            event_keys = ["--event_type", "--src_path", "--is_directory"]
+            event_values = event.key
+
+        event_options = dict(zip(event_keys, event_values))
+
+        if event_options["--is_directory"]:
+            event_options["--is_directory"] = None
+        else:
+            del event_options["--is_directory"]
+
+        return event_options
 
     @property
     def task_name(self):
@@ -167,6 +167,34 @@ class TaskRunner:
 
         return self
 
+    def run(self) -> None:
+        """
+        Executes registered tasks.
+        Scheduled/Observed tasks will not be executed until the startup task is complete.
+        """
+        self._run_startup_task()
+        self._observer.start()
+        self._scheduler.start()
+
+    def stop_startup_task(self):
+        for proc in self._running_startup_tasks.values():
+            proc.kill()
+
+    def join_startup_task(self):
+        for proc in self._running_startup_tasks.values():
+            proc.wait()
+
+    def stop(self) -> None:
+        """Stop execution of registered tasks other than the startup task."""
+        self.stop_startup_task()
+        self._observer.stop()
+        self._scheduler.stop()
+
+    def join(self) -> None:
+        self.join_startup_task()
+        self._observer.join()
+        self._scheduler.join()
+
     def _register(self, TD: TaskDetail, task: CommandExecuter) -> None:
         if TD.event_type == "time":
             self._scheduler = update_scheduler(
@@ -194,36 +222,8 @@ class TaskRunner:
                 self._await_running_task(task_name)
             self._running_startup_tasks[task_name] = task.execute()
 
-    def run(self) -> None:
-        """
-        Executes registered tasks.
-        Scheduled/Observed tasks will not be executed until the startup task is complete.
-        """
-        self._run_startup_task()
-        self._observer.start()
-        self._scheduler.start()
-
     def is_registered(self, task_name: str) -> bool:
         return task_name in self._registered_tasks.keys()
-
-    def stop_startup_task(self):
-        for proc in self._running_startup_tasks.values():
-            proc.kill()
-
-    def join_startup_task(self):
-        for proc in self._running_startup_tasks.values():
-            proc.wait()
-
-    def stop(self) -> None:
-        """Stop execution of registered tasks other than the startup task."""
-        self.stop_startup_task()
-        self._observer.stop()
-        self._scheduler.stop()
-
-    def join(self) -> None:
-        self.join_startup_task()
-        self._observer.join()
-        self._scheduler.join()
 
     @property
     def scheduling_tasks(self):

@@ -13,7 +13,7 @@ from .utils import check_job_properties
     ("crontab_format", "expected_job"),
     [
         ("*   *   *   *   *", schedule.every(1).minute.at(":00").do(print)),
-        (" *   *   *   *   * ", schedule.every(1).minute.at(":00").do(print)),
+        (" *  *   *   *   * ", schedule.every(1).minute.at(":00").do(print)),
         ("*/2 *   *   *   *", schedule.every(2).minutes.at(":00").do(print)),
         ("*   */2 *   *   *", schedule.every(2).hours.at(":00").do(print)),
         ("59  */2 *   *   *", schedule.every(2).hours.at(":59").do(print)),
