@@ -192,13 +192,17 @@ class TaskRunner:
     def stop(self) -> None:
         """Stop execution of registered tasks other than the startup task."""
         self.stop_startup_task()
-        self._observer.stop()
-        self._scheduler.stop()
+        if self._observer.is_alive():
+            self._observer.stop()
+        if self._scheduler.is_alive():
+            self._scheduler.stop()
 
     def join(self) -> None:
         self.join_startup_task()
-        self._observer.join()
-        self._scheduler.join()
+        if self._observer.is_alive():
+            self._observer.join()
+        if self._observer.is_alive():
+            self._scheduler.join()
 
     def _register(self, TD: TaskDetail, task: CommandExecuter) -> None:
         if TD.event_type == "time":
