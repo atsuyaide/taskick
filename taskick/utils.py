@@ -120,7 +120,6 @@ def set_a_task_to_scheduler(
     job = job.at(at_time)
 
     job.do(task, *args, **kwargs)
-    logger.debug(f"Added: {repr(job)}")
     return scheduler
 
 
