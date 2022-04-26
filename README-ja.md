@@ -83,7 +83,7 @@ INFO:taskick:Executing: remove_files_in_input_folder
 `input`フォルダにPNG画像を保存すると`output`フォルダに変換後のPDFファイルが出力されます.
 また`input`フォルダー内のファイルは, 起動時または1分ごとに自動的に削除されます.
 
-![png2gif](https://github.com/atsuyaide/taskick/raw/main/png_to_pdf.gif)
+![png2gif](https://github.com/atsuyaide/taskick/raw/main/toy-example.gif)
 
 このアプリケーションは`welcome.yaml`と`main.yaml`で構成され, Taskickは`batch.yaml`を読み込むことで間接的に2つのファイルを読み込んでいます.
 設定ファイルの詳細は, [プロジェクトページ](https://github.com/atsuyaide/taskick-example)をご覧ください.
