@@ -1,6 +1,7 @@
 name: Build & Publish to PyPi
 
 on:
+  branches: [main]
   release:
     types:
       - created
