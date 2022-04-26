@@ -1,10 +1,8 @@
 name: Build & Publish to PyPi
 
 on:
-  release:
+  push:
     branches: [main]
-    types:
-      - created
 
 jobs:
   deploy:
