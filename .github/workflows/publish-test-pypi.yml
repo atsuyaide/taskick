@@ -1,6 +1,5 @@
-name: Build & Publish
+name: Build & Publish to Test PyPi
 
-name: Python package
 on:
   push:
     branches:

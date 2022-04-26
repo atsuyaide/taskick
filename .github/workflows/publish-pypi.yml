@@ -1,6 +1,5 @@
-name: Build & Publish
+name: Build & Publish to PyPi
 
-name: Python package
 on:
   release:
     types:
