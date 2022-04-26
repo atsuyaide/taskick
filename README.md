@@ -23,23 +23,23 @@ And,
 ```shell
 $ pip install taskick
 $ python -m taskick
-Taskick 0.1.5
-usage: python -m taskick [-h] [--verbose] [--version] [--file FILE [FILE ...]]
-                         [--log-config LOG_CONFIG]
+Taskick 0.1.6a
+usage: python -m taskick [-h] [--verbose] [--version] [--batch-load BATCH_LOAD]
+                         [--file FILE [FILE ...]] [--log-config LOG_CONFIG]
 
 optional arguments:
   -h, --help            show this help message and exit
-  --verbose, -v         increase the verbosity of messages: '-v' for normal
-                        output, '-vv' for more verbose output and '-vvv' for
-                        debug
+  --verbose, -v         increase the verbosity of messages: '-v' for normal output, '-vv' for more
+                        verbose output and '-vvv' for debug
   --version, -V         display this application version and exit
+  --batch-load BATCH_LOAD, -b BATCH_LOAD
+                        configuration files can be load in batches
   --file FILE [FILE ...], -f FILE [FILE ...]
-                        specify configuration files (YAML) for the task to
-                        be executed
+                        specify configuration files (YAML) for the task to be executed
   --log-config LOG_CONFIG, -l LOG_CONFIG
                         specify a logging configuration file
 $ python -m taskick -V
-Taskick 0.1.5
+Taskick 0.1.6a
 ```
 
 ## Toy Example
@@ -59,20 +59,21 @@ Then, execute the following command.
 ```shell
 $ cd taskick-example
 $ pip install -r requirements.txt
-$ python -m taskick -f welcome.yaml main.yaml -vv
-INFO:taskick:Loading: welcome.yaml
+$ python -m taskick -b batch.yaml -vv
+INFO:taskick:Loading: ./config/welcome.yaml
 INFO:taskick:Processing: Welcome_taskick
-INFO:taskick:Startup execution option is selected.
-INFO:taskick:Registered: Welcome_taskick
-INFO:taskick:Loading: main.yaml
+INFO:taskick:Startup option is selected.
+INFO:taskick:Registered
+INFO:taskick:Loading: ./config/main.yaml
 INFO:taskick:Processing: remove_files_in_input_folder
-INFO:taskick:Startup execution option is selected.
-INFO:taskick:Registered: remove_files_in_input_folder
+INFO:taskick:Startup option is selected.
+INFO:taskick:Await option is selected.
+INFO:taskick:Registered
 INFO:taskick:Processing: png2pdf
-INFO:taskick:Registered: png2pdf
+INFO:taskick:Registered
 INFO:taskick:Executing: Welcome_taskick
 INFO:taskick:"remove_files_in_input_folder" is waiting for "Welcome_taskick" to finish.
-Sun Mar 27 00:10:45 JST 2022 Welcome to Taskick!
+Sun Apr 24 23:25:43 JST 2022 Welcome to Taskick!
 waiting 5 seconds...
 INFO:taskick:Executing: remove_files_in_input_folder
 ```
@@ -85,5 +86,5 @@ Files in the input folder are automatically deleted at startup or every minute.
 
 ![png2gif](https://github.com/atsuyaide/taskick/raw/main/png_to_pdf.gif)
 
-This application consist of `welcome.yaml` and `main.yaml`, and Taskick manages the execution of these tasks.
-For more information, please see the [project page](https://github.com/atsuyaide/taskick-example).
+The application consists of `welcome.yaml` and `main.yaml`, and Taskick reads the two files indirectly by loading `batch.yaml`.
+For details of the configuration files, see the [project page](https://github.com/atsuyaide/taskick-example).

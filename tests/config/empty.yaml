@@ -1,0 +1,13 @@
+example_task_1:
+  status: 0
+  commands:
+    - "echo aaa"
+  execution:
+    event_type: null
+
+example_task_2:
+  status: 0
+  commands:
+    - "echo aaa"
+  execution:
+    event_type: null
