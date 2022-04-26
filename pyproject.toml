@@ -1,6 +1,6 @@
 [tool.poetry]
 name = "taskick"
-version = "0.1.6a1"
+version = "0.1.6a2"
 description = "Taskick is an event-driven Python library that automatically executes scripts or any commands."
 authors = ["Atsuya Ide <atsuya.ide528@gmail.com>"]
 repository = "https://github.com/atsuyaide/taskick"
