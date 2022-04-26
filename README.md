@@ -21,9 +21,9 @@ And,
 ## Installation
 
 ```shell
-$ pip install taskick==0.1.6a2
+$ pip install taskick==0.1.6b0
 $ python -m taskick
-Taskick 0.1.6a2
+Taskick 0.1.6b0
 usage: python -m taskick [-h] [--verbose] [--version] [--batch-load BATCH_LOAD]
                          [--file FILE [FILE ...]] [--log-config LOG_CONFIG]
 
@@ -39,7 +39,7 @@ optional arguments:
   --log-config LOG_CONFIG, -l LOG_CONFIG
                         specify a logging configuration file
 $ python -m taskick -V
-Taskick 0.1.6a2
+Taskick 0.1.6b0
 ```
 
 ## Toy Example
