@@ -36,6 +36,7 @@ class ObservingDetail:
 
     @property
     def handler_args(self) -> dict:
+
         return self._handler_args
 
 

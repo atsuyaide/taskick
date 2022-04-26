@@ -18,8 +18,10 @@ from taskick.utils import (
     set_a_task_to_scheduler,
     simplify_crontab_format,
 )
+
 from watchdog.events import FileMovedEvent
 from watchdog.observers.polling import PollingObserver as Observer
+
 
 logger = logging.getLogger("taskick")
 
