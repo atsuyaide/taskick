@@ -1,11 +1,10 @@
 name: Build & Publish to Test PyPi
 
 on:
+  branches: [develop]
   push:
-    branches: [develop]
-    push:
-      tags:
-        - 'test-v*'
+    tags:
+      - 'test-v*'
 
 
 jobs:
