@@ -2,7 +2,7 @@ name: Build & Publish to Test PyPi
 
 on:
   push:
-    branches: [workflow/auto_deploy]
+    branches: [develop]
 
 jobs:
   deploy:

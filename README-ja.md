@@ -23,7 +23,7 @@ Taskickの主な機能は以下の通りです.
 ```shell
 $ pip install taskick
 $ python -m taskick
-Taskick 0.1.6a
+Taskick 0.1.6a1
 usage: python -m taskick [-h] [--verbose] [--version] [--batch-load BATCH_LOAD]
                          [--file FILE [FILE ...]] [--log-config LOG_CONFIG]
 
@@ -39,7 +39,7 @@ optional arguments:
   --log-config LOG_CONFIG, -l LOG_CONFIG
                         specify a logging configuration file
 $ python -m taskick -V
-Taskick 0.1.6a
+Taskick 0.1.6a1
 ```
 
 ## Toy Example
