@@ -85,5 +85,5 @@ INFO:taskick:Executing: remove_files_in_input_folder
 
 ![png2gif](https://github.com/atsuyaide/taskick/raw/main/png_to_pdf.gif)
 
-このアプリケーションは`welcome.yaml`と`main.yaml`で構成され, Taskickがそれらタスクの実行を管理しています.
-詳しくは, [プロジェクトページ](https://github.com/atsuyaide/taskick-example)をご覧ください.
+このアプリケーションは`welcome.yaml`と`main.yaml`で構成され, Taskickは`batch.yaml`を読み込むことで間接的に2つのファイルを読み込んでいます.
+設定ファイルの詳細は, [プロジェクトページ](https://github.com/atsuyaide/taskick-example)をご覧ください.

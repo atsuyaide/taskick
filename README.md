@@ -86,5 +86,5 @@ Files in the input folder are automatically deleted at startup or every minute.
 
 ![png2gif](https://github.com/atsuyaide/taskick/raw/main/png_to_pdf.gif)
 
-This application consist of `welcome.yaml` and `main.yaml`, and Taskick manages the execution of these tasks.
-For more information, please see the [project page](https://github.com/atsuyaide/taskick-example).
+The application consists of `welcome.yaml` and `main.yaml`, and Taskick reads the two files indirectly by loading `batch.yaml`.
+For details of the configuration files, see the [project page](https://github.com/atsuyaide/taskick-example).
