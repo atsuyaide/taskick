@@ -1,0 +1,17 @@
+name: Build & Publish to Test PyPi
+
+on:
+  push:
+    branches: [workflow/auto_deploy]
+
+jobs:
+  deploy:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v2
+      - name: Build and publish
+        uses: JRubics/poetry-publish@v1.10
+        with:
+          pypi_token: ${{ secrets.TEST_PYPI_TOKEN }}
+          repository_name: "taskick"
+          repository_url: "https://test.pypi.org/legacy/"
