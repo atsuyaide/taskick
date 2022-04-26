@@ -1,6 +1,6 @@
 from typing import List, Optional, Union
 
-from .utils import get_execute_command_list
+from taskick.utils import get_execute_command_list
 
 
 class SchedulingDetail:
@@ -35,7 +35,8 @@ class ObservingDetail:
         return self._handler
 
     @property
-    def handler_args(self):
+    def handler_args(self) -> dict:
+
         return self._handler_args
 
 

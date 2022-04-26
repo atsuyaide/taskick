@@ -1,0 +1,7 @@
+main:
+  status: 1
+  commands:
+    - "python"
+    - "./tests/src/await.py"
+  execution:
+    event_type: null
