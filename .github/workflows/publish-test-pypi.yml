@@ -13,4 +13,5 @@ jobs:
         uses: JRubics/poetry-publish@v1.10
         with:
           pypi_token: ${{ secrets.TEST_PYPI_TOKEN }}
+          repository_name: "taskick"
           repository_url: "https://test.pypi.org/legacy/"
