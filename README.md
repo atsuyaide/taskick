@@ -84,7 +84,7 @@ When a PNG image is saved in the `input` folder, a converted PDF file is output 
 Files in the input folder are automatically deleted at startup or every minute.
 
 
-![png2gif](https://github.com/atsuyaide/taskick/raw/main/png_to_pdf.gif)
+![png2gif](https://github.com/atsuyaide/taskick/raw/main/toy-example.gif)
 
 The application consists of `welcome.yaml` and `main.yaml`, and Taskick reads the two files indirectly by loading `batch.yaml`.
 For details of the configuration files, see the [project page](https://github.com/atsuyaide/taskick-example).
