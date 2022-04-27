@@ -294,6 +294,7 @@ class Taskicker:
         finally:
             self._TR.stop()
             self._TR.join()
+            logger.info("Bye.")
 
     def _show_version(self) -> None:
         print(f"Taskick {__version__}")
